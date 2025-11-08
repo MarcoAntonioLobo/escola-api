@@ -1,0 +1,142 @@
+package com.vlupt.escola_api.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import com.vlupt.escola_api.exception.ConflictException;
+import com.vlupt.escola_api.exception.ResourceNotFoundException;
+import com.vlupt.escola_api.model.Client;
+import com.vlupt.escola_api.model.DataClient;
+import com.vlupt.escola_api.repository.ClientRepository;
+import com.vlupt.escola_api.repository.DataClientRepository;
+import com.vlupt.escola_api.service.impl.ClientServiceImpl;
+import com.vlupt.escola_api.service.impl.DataClientServiceImpl;
+
+class ServiceIntegrationTest {
+
+    @Mock
+    private ClientRepository clientRepository;
+
+    @Mock
+    private DataClientRepository dataClientRepository;
+
+    @InjectMocks
+    private ClientServiceImpl clientService;
+
+    @InjectMocks
+    private DataClientServiceImpl dataClientService;
+
+    private Client client;
+    private DataClient dataClient;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        client = Client.builder()
+                .clientId(1)
+                .externalId("EXT123")
+                .schoolName("Escola ABC")
+                .cafeteriaName("Cantina ABC")
+                .location("Rua das Flores, 123")
+                .studentCount(250)
+                .build();
+
+        dataClient = DataClient.builder()
+                .dataId(1)
+                .client(client)
+                .monthDate(LocalDate.of(2025, 11, 1))
+                .revenue(BigDecimal.valueOf(12000))
+                .expenses(BigDecimal.valueOf(4000))
+                .notes("Teste inicial")
+                .build();
+    }
+
+    @Test
+    void testClientAndDataClientFlow() {
+        // --- Criando cliente ---
+        when(clientRepository.save(client)).thenReturn(client);
+        Client savedClient = clientService.save(client);
+        assertNotNull(savedClient);
+        assertEquals(client.getClientId(), savedClient.getClientId());
+
+        // --- Criando registro de dados ---
+        when(clientRepository.existsById(client.getClientId())).thenReturn(true);
+        when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
+            .thenReturn(Optional.empty());
+        when(dataClientRepository.save(dataClient)).thenReturn(dataClient);
+
+        DataClient savedData = dataClientService.save(dataClient);
+        assertNotNull(savedData);
+        assertEquals(client.getClientId(), savedData.getClient().getClientId());
+
+        // --- Tentando criar registro duplicado (conflito) ---
+        when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
+            .thenReturn(Optional.of(dataClient));
+
+        ConflictException exception = assertThrows(ConflictException.class, () -> {
+            dataClientService.save(dataClient);
+        });
+        assertTrue(exception.getMessage().contains("Já existe registro"));
+
+        // --- Atualizando registro de dados ---
+        DataClient updatedData = DataClient.builder()
+                .client(client)
+                .monthDate(dataClient.getMonthDate())
+                .revenue(BigDecimal.valueOf(15000))
+                .expenses(BigDecimal.valueOf(5000))
+                .notes("Atualizado")
+                .build();
+
+        when(dataClientRepository.findById(1)).thenReturn(Optional.of(dataClient));
+        when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), updatedData.getMonthDate()))
+            .thenReturn(Optional.of(dataClient)); // mesmo mês e cliente
+        when(dataClientRepository.save(any(DataClient.class))).thenReturn(updatedData);
+
+        DataClient resultUpdate = dataClientService.update(1, updatedData);
+        assertEquals(BigDecimal.valueOf(15000), resultUpdate.getRevenue());
+        assertEquals("Atualizado", resultUpdate.getNotes());
+
+        // --- Deletando registro de dados ---
+        when(dataClientRepository.existsById(1)).thenReturn(true);
+        doNothing().when(dataClientRepository).deleteById(1);
+        dataClientService.delete(1);
+        verify(dataClientRepository, times(1)).deleteById(1);
+
+        // --- Deletando cliente ---
+        when(clientRepository.existsById(client.getClientId())).thenReturn(true);
+        doNothing().when(clientRepository).deleteById(client.getClientId());
+        clientService.delete(client.getClientId());
+        verify(clientRepository, times(1)).deleteById(client.getClientId());
+    }
+
+    @Test
+    void testUpdateDataClientNotFound() {
+        when(dataClientRepository.findById(2)).thenReturn(Optional.empty());
+        DataClient update = DataClient.builder().build();
+        assertThrows(ResourceNotFoundException.class, () -> dataClientService.update(2, update));
+    }
+
+    @Test
+    void testDeleteDataClientNotFound() {
+        when(dataClientRepository.existsById(2)).thenReturn(false);
+        assertThrows(ResourceNotFoundException.class, () -> dataClientService.delete(2));
+    }
+}
