@@ -48,6 +48,9 @@ public class DataClient {
     @Builder.Default
     private BigDecimal expenses = BigDecimal.ZERO;
 
+    @Builder.Default
+    private Integer orderCount = 0; // NOVO CAMPO
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 }

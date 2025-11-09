@@ -64,17 +64,14 @@ class DataClientControllerTest {
 
     @BeforeEach
     void setup() {
-        // Configura o ObjectMapper para lidar com LocalDate
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // Configura MockMvc com o GlobalExceptionHandler
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
-        // Cria cliente e dado de teste
         client = Client.builder().clientId(1).schoolName("Escola Teste").build();
 
         dataClient = DataClient.builder()
@@ -83,23 +80,24 @@ class DataClientControllerTest {
                 .monthDate(LocalDate.of(2025, 11, 1))
                 .revenue(BigDecimal.valueOf(1000))
                 .expenses(BigDecimal.valueOf(500))
+                .orderCount(10)
                 .build();
 
-        // DTO de request
         requestDTO = new DataClientRequestDTO();
         requestDTO.setClientId(client.getClientId());
         requestDTO.setMonthDate(dataClient.getMonthDate());
         requestDTO.setRevenue(dataClient.getRevenue());
         requestDTO.setExpenses(dataClient.getExpenses());
+        requestDTO.setOrderCount(dataClient.getOrderCount()); // NOVO CAMPO
         requestDTO.setNotes("Teste");
 
-        // DTO de response
         responseDTO = DataClientResponseDTO.builder()
                 .dataId(dataClient.getDataId())
                 .clientId(client.getClientId())
                 .monthDate(dataClient.getMonthDate())
                 .revenue(dataClient.getRevenue())
                 .expenses(dataClient.getExpenses())
+                .orderCount(dataClient.getOrderCount()) // NOVO CAMPO
                 .notes("Teste")
                 .build();
     }
@@ -111,7 +109,8 @@ class DataClientControllerTest {
 
         mockMvc.perform(get("/client-data"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()));
+                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
+                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()));
     }
 
     @Test
@@ -121,7 +120,8 @@ class DataClientControllerTest {
 
         mockMvc.perform(get("/client-data/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()));
+                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
     }
 
     @Test
@@ -144,7 +144,8 @@ class DataClientControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()));
+                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
     }
 
     @Test
@@ -169,7 +170,8 @@ class DataClientControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()));
+                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
     }
 
     @Test
@@ -207,6 +209,7 @@ class DataClientControllerTest {
 
         mockMvc.perform(get("/client-data/client/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()));
+                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
+                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()));
     }
 }
