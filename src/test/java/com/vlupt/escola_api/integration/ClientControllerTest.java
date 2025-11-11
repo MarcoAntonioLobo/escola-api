@@ -4,7 +4,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -52,8 +52,8 @@ class ClientControllerTest {
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-        service = mock(ClientService.class);
         mapper = new ClientMapper();
         controller = new ClientController(service, mapper);
 
@@ -87,7 +87,6 @@ class ClientControllerTest {
     @Test
     void testCreate_InvalidJson() throws Exception {
         ClientRequestDTO invalidDTO = new ClientRequestDTO();
-        // Campos obrigatórios vazios → validação falha
         invalidDTO.setExternalId("");
         invalidDTO.setSchoolName("");
         invalidDTO.setCafeteriaName("");
@@ -100,6 +99,18 @@ class ClientControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").exists());
+    }
+
+    @Test
+    void testUpdate_Success() throws Exception {
+        when(service.update(eq(1), any(Client.class))).thenReturn(client);
+
+        mockMvc.perform(put("/clients/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clientId").value(1))
+                .andExpect(jsonPath("$.schoolName").value("Escola ABC"));
     }
 
     @Test

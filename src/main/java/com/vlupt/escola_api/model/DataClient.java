@@ -39,9 +39,11 @@ public class DataClient {
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
+    // Data do mês referente à métrica (podemos extrair mês e ano desse campo)
     @Column(name = "month_date", nullable = false)
     private LocalDate monthDate;
 
+    // Receita, despesas e contagem de pedidos
     @Builder.Default
     private BigDecimal revenue = BigDecimal.ZERO;
 
@@ -49,8 +51,17 @@ public class DataClient {
     private BigDecimal expenses = BigDecimal.ZERO;
 
     @Builder.Default
-    private Integer orderCount = 0; // NOVO CAMPO
+    private Integer orderCount = 0;
+
+    @Builder.Default
+    @Column(name = "registered_students", nullable = false)
+    private Integer registeredStudents = 0;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    // Método auxiliar para pegar o ano direto
+    public Integer getYear() {
+        return this.monthDate != null ? this.monthDate.getYear() : null;
+    }
 }

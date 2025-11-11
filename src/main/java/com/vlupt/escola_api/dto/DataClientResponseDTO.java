@@ -20,7 +20,9 @@ public class DataClientResponseDTO {
 
     private BigDecimal expenses;
 
-    private Integer orderCount; // NOVO CAMPO
+    private Integer orderCount;
+
+    private Integer registeredStudents;
 
     private String notes;
 }

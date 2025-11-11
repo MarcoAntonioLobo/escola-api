@@ -14,23 +14,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MetricsDTO {
 
-    // 1 e 6: Alunos
-    private String schoolName;
-    private int totalStudentsSchool;        // Total de alunos na escola
-    private int totalStudentsRegistered;    // Alunos cadastrados na Vlupt
+	private String schoolName;
+	
+	private int totalStudentsSchool;
+	
+	private int totalStudentsRegistered;
+	
+	private BigDecimal studentsRegisteredVsTotal;
 
-    // 2: Lucro por aluno cadastrado
-    private BigDecimal profitPerStudent;
+	private BigDecimal profitPerStudent;
 
-    // 3 e 7: Ticket médio cantina
-    private BigDecimal averageTicket;
+	private BigDecimal averageTicket;
 
-    // 4 e 8: Média de pedidos por aluno cadastrado
-    private double averageOrdersPerStudent;
+	private double averageOrdersPerStudent;
 
-    // 5 e 9: Quantidade de pedidos por mês
-    private int totalOrdersMonth;
+	private int totalOrdersMonth;
 
-    // Mês referente à métrica
-    private Month month;
+	private Month month;
 }

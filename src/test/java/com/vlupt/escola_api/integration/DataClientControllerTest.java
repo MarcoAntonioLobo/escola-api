@@ -81,6 +81,8 @@ class DataClientControllerTest {
                 .revenue(BigDecimal.valueOf(1000))
                 .expenses(BigDecimal.valueOf(500))
                 .orderCount(10)
+                .registeredStudents(100)
+                .notes("Teste")
                 .build();
 
         requestDTO = new DataClientRequestDTO();
@@ -88,8 +90,9 @@ class DataClientControllerTest {
         requestDTO.setMonthDate(dataClient.getMonthDate());
         requestDTO.setRevenue(dataClient.getRevenue());
         requestDTO.setExpenses(dataClient.getExpenses());
-        requestDTO.setOrderCount(dataClient.getOrderCount()); // NOVO CAMPO
-        requestDTO.setNotes("Teste");
+        requestDTO.setOrderCount(dataClient.getOrderCount());
+        requestDTO.setRegisteredStudents(dataClient.getRegisteredStudents());
+        requestDTO.setNotes(dataClient.getNotes());
 
         responseDTO = DataClientResponseDTO.builder()
                 .dataId(dataClient.getDataId())
@@ -97,8 +100,9 @@ class DataClientControllerTest {
                 .monthDate(dataClient.getMonthDate())
                 .revenue(dataClient.getRevenue())
                 .expenses(dataClient.getExpenses())
-                .orderCount(dataClient.getOrderCount()) // NOVO CAMPO
-                .notes("Teste")
+                .orderCount(dataClient.getOrderCount())
+                .registeredStudents(dataClient.getRegisteredStudents())
+                .notes(dataClient.getNotes())
                 .build();
     }
 
@@ -110,7 +114,8 @@ class DataClientControllerTest {
         mockMvc.perform(get("/client-data"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()));
+                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
+                .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
     @Test
@@ -121,7 +126,8 @@ class DataClientControllerTest {
         mockMvc.perform(get("/client-data/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
+                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
     @Test
@@ -145,7 +151,8 @@ class DataClientControllerTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
+                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
     @Test
@@ -171,7 +178,8 @@ class DataClientControllerTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()));
+                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
+                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
     @Test
@@ -210,6 +218,7 @@ class DataClientControllerTest {
         mockMvc.perform(get("/client-data/client/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()));
+                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
+                .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 }

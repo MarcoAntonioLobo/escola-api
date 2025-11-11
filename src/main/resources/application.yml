@@ -1,20 +1,23 @@
-server:
-  port: 8080
-
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/escola_db?useSSL=false&serverTimezone=UTC}
-    username: ${SPRING_DATASOURCE_USERNAME:escola_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:senha_forte_aqui}
+    url: jdbc:mysql://localhost:3306/escola_db?useSSL=false&serverTimezone=UTC
+    username: escola_user
+    password: senha_forte_aqui
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop   # recria tabelas toda vez
     properties:
       hibernate:
         sql: false
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
 
   security:
     user:
       name: Mark
       password: 233234
+      roles: ADMIN

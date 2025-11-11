@@ -51,6 +51,7 @@ class DataClientServiceImplTest {
         client = Client.builder()
                 .clientId(1)
                 .schoolName("Escola ABC")
+                .studentCount(100)
                 .build();
 
         dataClient = DataClient.builder()
@@ -59,6 +60,8 @@ class DataClientServiceImplTest {
                 .monthDate(LocalDate.of(2025, 11, 1))
                 .revenue(BigDecimal.valueOf(1000))
                 .expenses(BigDecimal.valueOf(500))
+                .orderCount(50)
+                .registeredStudents(80)
                 .notes("Teste")
                 .build();
     }
@@ -137,6 +140,8 @@ class DataClientServiceImplTest {
                 .monthDate(dataClient.getMonthDate())
                 .revenue(BigDecimal.valueOf(2000))
                 .expenses(BigDecimal.valueOf(1000))
+                .orderCount(100)
+                .registeredStudents(90)
                 .notes("Atualizado")
                 .build();
 
@@ -150,6 +155,8 @@ class DataClientServiceImplTest {
 
         assertEquals(BigDecimal.valueOf(2000), result.getRevenue());
         assertEquals("Atualizado", result.getNotes());
+        assertEquals(100, result.getOrderCount());
+        assertEquals(90, result.getRegisteredStudents());
     }
 
     @Test

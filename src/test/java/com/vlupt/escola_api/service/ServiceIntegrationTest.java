@@ -65,6 +65,8 @@ class ServiceIntegrationTest {
                 .monthDate(LocalDate.of(2025, 11, 1))
                 .revenue(BigDecimal.valueOf(12000))
                 .expenses(BigDecimal.valueOf(4000))
+                .orderCount(50)
+                .registeredStudents(200)
                 .notes("Teste inicial")
                 .build();
     }
@@ -86,6 +88,8 @@ class ServiceIntegrationTest {
         DataClient savedData = dataClientService.save(dataClient);
         assertNotNull(savedData);
         assertEquals(client.getClientId(), savedData.getClient().getClientId());
+        assertEquals(200, savedData.getRegisteredStudents());
+        assertEquals(50, savedData.getOrderCount());
 
         // --- Tentando criar registro duplicado (conflito) ---
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
@@ -94,7 +98,7 @@ class ServiceIntegrationTest {
         ConflictException exception = assertThrows(ConflictException.class, () -> {
             dataClientService.save(dataClient);
         });
-        assertTrue(exception.getMessage().contains("Já existe registro"));
+        assertTrue(exception.getMessage().contains("Já existe registro de dados para esse cliente"));
 
         // --- Atualizando registro de dados ---
         DataClient updatedData = DataClient.builder()
@@ -102,17 +106,21 @@ class ServiceIntegrationTest {
                 .monthDate(dataClient.getMonthDate())
                 .revenue(BigDecimal.valueOf(15000))
                 .expenses(BigDecimal.valueOf(5000))
+                .orderCount(60)
+                .registeredStudents(220)
                 .notes("Atualizado")
                 .build();
 
         when(dataClientRepository.findById(1)).thenReturn(Optional.of(dataClient));
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), updatedData.getMonthDate()))
-            .thenReturn(Optional.of(dataClient)); // mesmo mês e cliente
+            .thenReturn(Optional.empty());
         when(dataClientRepository.save(any(DataClient.class))).thenReturn(updatedData);
 
         DataClient resultUpdate = dataClientService.update(1, updatedData);
         assertEquals(BigDecimal.valueOf(15000), resultUpdate.getRevenue());
         assertEquals("Atualizado", resultUpdate.getNotes());
+        assertEquals(220, resultUpdate.getRegisteredStudents());
+        assertEquals(60, resultUpdate.getOrderCount());
 
         // --- Deletando registro de dados ---
         when(dataClientRepository.existsById(1)).thenReturn(true);

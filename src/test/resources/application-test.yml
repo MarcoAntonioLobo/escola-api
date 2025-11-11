@@ -1,12 +1,12 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:escola;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:escola-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password: sa
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -16,3 +16,7 @@ spring:
       enabled: true
   security:
     enabled: false
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data-test.sql   # <- Aqui você indica o script do teste

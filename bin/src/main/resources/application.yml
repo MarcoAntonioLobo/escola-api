@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/escola_db?useSSL=false&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:escola_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:senha_forte_aqui}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        sql: false
+
+  security:
+    user:
+      name: Mark
+      password: 233234
