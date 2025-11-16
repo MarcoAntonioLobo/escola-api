@@ -20,7 +20,7 @@ public class DataClientMapper {
                 .monthDate(dto.getMonthDate())
                 .revenue(dto.getRevenue())
                 .expenses(dto.getExpenses())
-                .orderCount(dto.getOrderCount()) // NOVO
+                .orderCount(dto.getOrderCount())
                 .notes(dto.getNotes())
                 .build();
     }
@@ -36,7 +36,8 @@ public class DataClientMapper {
                 .monthDate(entity.getMonthDate())
                 .revenue(entity.getRevenue())
                 .expenses(entity.getExpenses())
-                .orderCount(entity.getOrderCount()) // NOVO
+                .orderCount(entity.getOrderCount())
+                .registeredStudents(entity.getRegisteredStudents())
                 .notes(entity.getNotes())
                 .build();
     }

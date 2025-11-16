@@ -6,7 +6,21 @@ export default function DataClientPage() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    api.get("/client-data").then(res => setData(res.data));
+    const fetchData = async () => {
+      try {
+        const res = await api.get("/client-data");
+        // garante que registeredStudents nunca seja null
+        const fixedData = res.data.map(d => ({
+          ...d,
+          registeredStudents: d.registeredStudents ?? 0,
+        }));
+        setData(fixedData);
+      } catch (error) {
+        console.error("Erro ao buscar dados dos clientes:", error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   return (
@@ -33,9 +47,9 @@ export default function DataClientPage() {
                   <tr key={d.dataId} className="hover:bg-gray-700">
                     <td className="p-2">{d.dataId}</td>
                     <td className="p-2">{d.clientId}</td>
-                    <td className="p-2">{d.monthDate}</td>
-                    <td className="p-2">{d.revenue}</td>
-                    <td className="p-2">{d.expenses}</td>
+                    <td className="p-2">{new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</td>
+                    <td className="p-2">{d.revenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+                    <td className="p-2">{d.expenses.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
                     <td className="p-2">{d.orderCount}</td>
                     <td className="p-2">{d.registeredStudents}</td>
                     <td className="p-2">{d.notes}</td>
