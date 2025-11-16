@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/client-data")
+@RequestMapping("/api/client-data")
 public class DataClientController {
 
     private final DataClientService service;

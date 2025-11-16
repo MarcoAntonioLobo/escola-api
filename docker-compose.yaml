@@ -1,6 +1,10 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
     container_name: escola_app
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/escola?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -14,6 +18,17 @@ services:
       - db
     networks:
       - escola_net
+    volumes:
+      - ./src:/app/src         # Hot reload backend
+      - ./frontend:/app/frontend # Hot reload frontend
+      - /app/target           # Persistir build (dev)
+    command: >
+      sh -c "if [ '${NODE_ENV}' = 'dev' ]; then
+               cd frontend && npm install && npm run dev & 
+               mvn spring-boot:run;
+             else
+               java -jar app.jar;
+             fi"
 
   db:
     image: mysql:8.1

@@ -1,0 +1,135 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #111827; /* CINZA MUITO ESCURO */
+  color: #f3f4f6; /* texto claro */
+  padding: 20px;
+}
+
+/* Cabeçalho */
+header {
+  background-color: #0f172a;
+  color: white;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 1.7rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+}
+
+/* Navegação */
+nav {
+  background-color: #1e293b;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+}
+
+nav a {
+  text-decoration: none;
+  color: #e5e7eb;
+  font-weight: bold;
+  background-color: #0f172a;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  transition: 0.2s;
+}
+
+nav a:hover {
+  background-color: #334155;
+  color: white;
+}
+
+/* Tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+th, td {
+  border: 1px solid #374151;
+  padding: 0.9rem;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+th {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  font-weight: bold;
+}
+
+tbody tr {
+  background-color: #111827;
+}
+
+tbody tr:hover {
+  background-color: #334155;
+}
+
+/* Inputs e selects */
+input, select {
+  padding: 0.75rem 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #f3f4f6;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 2px rgba(147,197,253,0.4);
+}
+
+/* Botões */
+button {
+  padding: 0.75rem 1.2rem;
+  border-radius: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: 0.2s;
+  background-color: #1e293b;
+  color: #f3f4f6;
+  border: 1px solid #334155;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+}
+
+button:hover {
+  background-color: #334155;
+  border-color: #475569;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* PAGINAÇÃO */
+div.pagination {
+  display: flex;
+  justify-content: center !important;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem;
+}

@@ -35,15 +35,13 @@ public class DataClient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer dataId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) // <-- ALTERADO AQUI
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 
-    // Data do mês referente à métrica (podemos extrair mês e ano desse campo)
     @Column(name = "month_date", nullable = false)
     private LocalDate monthDate;
 
-    // Receita, despesas e contagem de pedidos
     @Builder.Default
     private BigDecimal revenue = BigDecimal.ZERO;
 
@@ -60,7 +58,6 @@ public class DataClient {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
-    // Método auxiliar para pegar o ano direto
     public Integer getYear() {
         return this.monthDate != null ? this.monthDate.getYear() : null;
     }
