@@ -10,19 +10,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.vlupt.escola_api.dto.ClientFilterDTO;
 import com.vlupt.escola_api.dto.ClientRequestDTO;
 import com.vlupt.escola_api.dto.ClientResponseDTO;
-import com.vlupt.escola_api.dto.ErrorResponse;
 import com.vlupt.escola_api.exception.ResourceNotFoundException;
 import com.vlupt.escola_api.mapper.ClientMapper;
 import com.vlupt.escola_api.model.Client;
 import com.vlupt.escola_api.service.ClientService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -37,13 +35,6 @@ public class ClientController {
         this.mapper = mapper;
     }
 
-    @Operation(summary = "Lista todos os clientes")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Sucesso"),
-        @ApiResponse(responseCode = "500", description = "Erro interno",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
-    })
     @GetMapping
     public List<ClientResponseDTO> findAll() {
         return service.findAll().stream()
@@ -51,16 +42,6 @@ public class ClientController {
                 .toList();
     }
 
-    @Operation(summary = "Busca cliente por ID")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cliente encontrado"),
-        @ApiResponse(responseCode = "404", description = "Cliente não encontrado",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Erro interno",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
-    })
     @GetMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> findById(@PathVariable Integer id) {
         Client client = service.findById(id)
@@ -68,35 +49,12 @@ public class ClientController {
         return ResponseEntity.ok(mapper.toResponse(client));
     }
 
-    @Operation(summary = "Cria um novo cliente")
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Cliente criado"),
-        @ApiResponse(responseCode = "400", description = "Requisição inválida",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Erro interno",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
-    })
     @PostMapping
     public ResponseEntity<ClientResponseDTO> create(@Valid @RequestBody ClientRequestDTO dto) {
         Client saved = service.save(mapper.toEntity(dto));
         return ResponseEntity.status(201).body(mapper.toResponse(saved));
     }
 
-    @Operation(summary = "Atualiza um cliente existente")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cliente atualizado"),
-        @ApiResponse(responseCode = "400", description = "Requisição inválida",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "404", description = "Cliente não encontrado",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Erro interno",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
-    })
     @PutMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> update(
             @PathVariable Integer id,
@@ -105,19 +63,48 @@ public class ClientController {
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
-    @Operation(summary = "Deleta um cliente")
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Cliente deletado"),
-        @ApiResponse(responseCode = "404", description = "Cliente não encontrado",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "500", description = "Erro interno",
-                     content = @io.swagger.v3.oas.annotations.media.Content(
-                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = ErrorResponse.class)))
-    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // =============================================
+    // POST /filter  (BODY)
+    // =============================================
+    @PostMapping("/filter")
+    public List<ClientResponseDTO> filterClients(@RequestBody ClientFilterDTO filter) {
+        return service.filter(filter).stream()
+                .map(mapper::toResponse)
+                .toList();
+    }
+
+    // =============================================
+    // GET /filter  (QUERY PARAMS)
+    // =============================================
+    @GetMapping("/filter")
+    public List<ClientResponseDTO> filterClientsGet(
+            @RequestParam(required = false) Integer clientId,
+            @RequestParam(required = false) String schoolName,
+            @RequestParam(required = false) String externalId,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String cafeteriaName,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDirection
+    ) {
+
+        ClientFilterDTO filter = new ClientFilterDTO();
+        filter.setClientId(clientId);
+        filter.setSchoolName(schoolName);
+        filter.setExternalId(externalId);
+        filter.setLocation(location);
+        filter.setCafeteriaName(cafeteriaName);
+        filter.setSortBy(sortBy);
+        filter.setSortDirection(sortDirection);
+
+        return service.filter(filter)
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 }
