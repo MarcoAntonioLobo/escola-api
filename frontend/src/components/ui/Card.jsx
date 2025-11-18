@@ -1,6 +1,6 @@
 export function Card({ children, className = "", ...props }) {
   return (
-    <div className={`bg-gray-800 shadow-lg rounded-2xl p-4 ${className}`} {...props}>
+    <div className={`bg-gray-800 shadow-lg rounded-2xl p-4 relative ${className}`} {...props}>
       {children}
     </div>
   );

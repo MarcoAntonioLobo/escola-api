@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../services/api";
 import { Card, CardContent } from "../components/ui/Card";
-import FilterBar from "../components/FilterBar";
-import { ArrowUpDown, Printer, ArrowUp } from "lucide-react";
+import Pagination from "../components/Pagination";
+import { ArrowUpDown, Printer, Download, MoreVertical } from "lucide-react";
 
 const VALID_SORT_FIELDS = [
   "clientId",
@@ -15,52 +15,73 @@ const VALID_SORT_FIELDS = [
 
 export default function ClientsPage() {
   const [clients, setClients] = useState([]);
-  const [filters, setFilters] = useState({ schoolName: "", location: "", cafeteriaName: "" });
-  const [sortConfig, setSortConfig] = useState({ sortBy: "studentCount", sortDirection: "asc" });
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    handleFilter();
-  }, []);
+  const [sortBy, setSortBy] = useState("studentCount");
+  const [direction, setDirection] = useState("asc");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  };
+  const [schoolFilter, setSchoolFilter] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleFilter = async (sortBy = sortConfig.sortBy, sortDirection = sortConfig.sortDirection) => {
+  const fetchClients = useCallback(async () => {
     try {
-      const params = {};
-      if (filters.schoolName) params.schoolName = filters.schoolName;
-      if (filters.location) params.location = filters.location;
-      if (filters.cafeteriaName) params.cafeteriaName = filters.cafeteriaName;
-
-      if (VALID_SORT_FIELDS.includes(sortBy)) params.sortBy = sortBy;
-      params.sortDirection = sortDirection;
+      const params = { page, size: 5, sortBy, direction };
+      if (schoolFilter) params.schoolName = schoolFilter;
 
       const res = await api.get("/clients/filter", { params });
-      setClients(res.data);
+      const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
+      setClients(data);
+      setTotalPages(res.data?.totalPages || 1);
     } catch (err) {
-      console.error("Erro ao filtrar clientes:", err);
+      console.error("Erro ao carregar clientes:", err);
+      setClients([]);
+      setTotalPages(1);
+    }
+  }, [page, sortBy, direction, schoolFilter]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setPage(0);
+      fetchClients();
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [schoolFilter, fetchClients]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [page, sortBy, direction, fetchClients]);
+
+  const toggleSort = (field) => {
+    if (!VALID_SORT_FIELDS.includes(field)) return;
+    if (sortBy === field) {
+      setDirection(direction === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setDirection("asc");
     }
   };
 
-  const handleClear = () => {
-    const reset = { sortBy: "studentCount", sortDirection: "asc" };
-    setFilters({ schoolName: "", location: "", cafeteriaName: "" });
-    setSortConfig(reset);
-    handleFilter(reset.sortBy, reset.sortDirection);
-  };
-
-  const handleSort = (column) => {
-    if (!VALID_SORT_FIELDS.includes(column)) return;
-
-    let direction = "asc";
-    if (sortConfig.sortBy === column && sortConfig.sortDirection === "asc") direction = "desc";
-
-    const newSort = { sortBy: column, sortDirection: direction };
-    setSortConfig(newSort);
-    handleFilter(column, direction);
-  };
+  const SortHeader = ({ field, label }) => (
+    <th
+      className="p-2 text-left cursor-pointer select-none"
+      onClick={() => toggleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        <span>{label}</span>
+        <ArrowUpDown
+          size={14}
+          className={`transition-all duration-200 ${
+            sortBy === field
+              ? direction === "asc"
+                ? "text-green-400 rotate-180"
+                : "text-red-400 rotate-0"
+              : "text-gray-300 opacity-40"
+          }`}
+        />
+      </div>
+    </th>
+  );
 
   const handlePrint = () => {
     const printContent = document.getElementById("clients-table");
@@ -75,77 +96,80 @@ export default function ClientsPage() {
   };
 
   const handleDownload = () => {
-    const csvRows = [
-      ["ID", "ID Externo", "Escola", "Cantina", "Localização", "Total Alunos"],
-      ...clients.map((c) => [
-        `"${c.clientId}"`,
-        `"${c.externalId}"`,
-        `"${c.schoolName}"`,
-        `"${c.cafeteriaName}"`,
-        `"${c.location}"`,
-        `"${c.studentCount}"`,
-      ]),
-    ];
-
-    const csvContent = csvRows.map((e) => e.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+    if (!clients.length) return;
+    const headers = ["ID", "ID Externo", "Escola", "Cantina", "Localização", "Total Alunos"];
+    const rows = clients.map((c) => [
+      c.clientId,
+      c.externalId,
+      c.schoolName,
+      c.cafeteriaName,
+      c.location,
+      c.studentCount,
+    ]);
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
+    link.setAttribute("href", encodedUri);
     link.setAttribute("download", "clientes.csv");
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen text-gray-100">
-      <h2 className="text-2xl font-bold mb-4 text-gray-100">Clientes</h2>
+    <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
+      <Card className="relative w-full max-w-6xl">
+        {/* Ícones topo direito */}
+        <div className="absolute top-4 right-4 flex gap-2 z-50">
+          <Download
+            size={20}
+            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
+            onClick={handleDownload}
+          />
+          <Printer
+            size={20}
+            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
+            onClick={handlePrint}
+          />
+          <MoreVertical
+            size={20}
+            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
+            onClick={() => setMenuOpen(!menuOpen)}
+          />
+        </div>
 
-      <FilterBar filters={filters} onChange={handleChange} onFilter={() => handleFilter()} onClear={handleClear} />
+        {/* Filtros no menu kebab */}
+        {menuOpen && (
+          <CardContent className="mb-4">
+            <input
+              type="text"
+              placeholder="Digite o nome da escola"
+              value={schoolFilter}
+              onChange={(e) => setSchoolFilter(e.target.value)}
+              className="p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full"
+            />
+          </CardContent>
+        )}
 
-      <Card>
+        {/* Tabela sempre visível */}
         <CardContent>
-          <div className="relative">
-            <div className="absolute top-2 right-2 flex gap-2 z-10">
-              <Printer size={20} className="text-gray-200 cursor-pointer hover:text-indigo-400" onClick={handlePrint} />
-              <ArrowUp size={20} className="text-gray-200 cursor-pointer hover:text-indigo-400" onClick={handleDownload} />
-            </div>
-
-            <div id="clients-table" className="overflow-x-auto">
-              <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
-                <thead className="bg-gray-700 text-gray-100">
-                  <tr>
-                    {["clientId", "externalId", "schoolName", "cafeteriaName", "location", "studentCount"].map((col) => (
-                      <th key={col} className="p-2 text-left cursor-pointer select-none" onClick={() => handleSort(col)}>
-                        <div className="flex items-center gap-1">
-                          <span>
-                            {col === "clientId" && "ID"}
-                            {col === "externalId" && "ID Externo"}
-                            {col === "schoolName" && "Escola"}
-                            {col === "cafeteriaName" && "Cantina"}
-                            {col === "location" && "Localização"}
-                            {col === "studentCount" && "Total Alunos"}
-                          </span>
-
-                          {/* DESIGN IGUAL DATACLIENT */}
-                          <span
-                            className={`transition-all duration-200 ${
-                              sortConfig.sortBy === col
-                                ? sortConfig.sortDirection === "asc"
-                                  ? "text-green-400 rotate-180"
-                                  : "text-red-400 rotate-0"
-                                : "text-gray-300 opacity-40"
-                            }`}
-                          >
-                            <ArrowUpDown size={14} />
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody className="bg-gray-800 divide-y divide-gray-700">
-                  {clients.map((c) => (
+          <div className="overflow-x-auto" id="clients-table">
+            <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
+              <thead className="bg-gray-700 text-gray-100">
+                <tr>
+                  <SortHeader field="clientId" label="ID" />
+                  <SortHeader field="externalId" label="ID Externo" />
+                  <SortHeader field="schoolName" label="Escola" />
+                  <SortHeader field="cafeteriaName" label="Cantina" />
+                  <SortHeader field="location" label="Localização" />
+                  <SortHeader field="studentCount" label="Total Alunos" />
+                </tr>
+              </thead>
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
+                {clients.length > 0 ? (
+                  clients.map((c) => (
                     <tr key={c.clientId} className="hover:bg-gray-700">
                       <td className="p-2">{c.clientId}</td>
                       <td className="p-2">{c.externalId}</td>
@@ -154,11 +178,20 @@ export default function ClientsPage() {
                       <td className="p-2">{c.location}</td>
                       <td className="p-2">{c.studentCount}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center p-4 text-gray-400">
+                      Nenhum dado disponível
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+
+          {/* Paginação */}
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
     </div>

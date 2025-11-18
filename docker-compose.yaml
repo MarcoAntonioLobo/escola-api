@@ -7,6 +7,7 @@ services:
         NODE_ENV: production
     container_name: escola_app
     environment:
+      NODE_ENV: production               # <-- adiciona aqui para eliminar o WARN
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/escola?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: escola_user
       SPRING_DATASOURCE_PASSWORD: escola_pass

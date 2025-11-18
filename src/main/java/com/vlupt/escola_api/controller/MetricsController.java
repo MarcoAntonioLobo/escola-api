@@ -1,6 +1,5 @@
 package com.vlupt.escola_api.controller;
 
-import java.time.Month;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.vlupt.escola_api.dto.MetricsDTO;
+import com.vlupt.escola_api.dto.MetricsFilterDTO;
 import com.vlupt.escola_api.service.MetricsService;
 
 @RestController
@@ -26,22 +26,38 @@ public class MetricsController {
 
     @GetMapping
     public ResponseEntity<List<MetricsDTO>> getMetrics(
-        @RequestParam(required = false) Long clientId,
-        @RequestParam(required = false) Month month,
-        @RequestParam(required = false) Integer year
+        @RequestParam(required = false) String schoolName,
+        @RequestParam(required = false) Integer month,
+        @RequestParam(required = false) Integer year,
+        @RequestParam(required = false) String sortBy,
+        @RequestParam(required = false) String direction
     ) {
-        return ResponseEntity.ok(
-            metricsService.getMetricsFiltered(clientId, month, year)
-        );
+        MetricsFilterDTO filter = new MetricsFilterDTO();
+        filter.setSchoolName(schoolName);
+        filter.setMonth(month != null ? java.time.Month.of(month) : null);
+        filter.setYear(year);
+        filter.setSortBy(sortBy);
+        filter.setSortDirection(direction);
+
+        return ResponseEntity.ok(metricsService.getMetricsFiltered(filter));
     }
 
     @GetMapping("/paged")
     public Page<MetricsDTO> getMetricsPaged(
-        @RequestParam(required = false) Long clientId,
-        @RequestParam(required = false) Month month,
+        @RequestParam(required = false) String schoolName,
+        @RequestParam(required = false) Integer month,
         @RequestParam(required = false) Integer year,
+        @RequestParam(required = false) String sortBy,
+        @RequestParam(required = false) String direction,
         Pageable pageable
     ) {
-        return metricsService.getMetricsFilteredPaged(clientId, month, year, pageable);
+        MetricsFilterDTO filter = new MetricsFilterDTO();
+        filter.setSchoolName(schoolName);
+        filter.setMonth(month != null ? java.time.Month.of(month) : null);
+        filter.setYear(year);
+        filter.setSortBy(sortBy);
+        filter.setSortDirection(direction);
+
+        return metricsService.getMetricsFilteredPaged(filter, pageable);
     }
 }

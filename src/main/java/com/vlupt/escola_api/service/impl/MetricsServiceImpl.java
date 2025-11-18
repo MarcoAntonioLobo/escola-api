@@ -2,7 +2,7 @@ package com.vlupt.escola_api.service.impl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Month;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.vlupt.escola_api.dto.MetricsDTO;
+import com.vlupt.escola_api.dto.MetricsFilterDTO;
 import com.vlupt.escola_api.model.Client;
 import com.vlupt.escola_api.model.DataClient;
 import com.vlupt.escola_api.repository.ClientRepository;
@@ -29,20 +30,19 @@ public class MetricsServiceImpl implements MetricsService {
         this.dataClientRepository = dataClientRepository;
     }
 
-    // ============================================
-    // MÉTODOS DE FILTRO
-    // ============================================
     @Override
-    public List<MetricsDTO> getMetricsFiltered(Long clientId, Month month, Integer year) {
+    public List<MetricsDTO> getMetricsFiltered(MetricsFilterDTO filter) {
         List<DataClient> data = dataClientRepository.findAll();
-        data = applyFilters(data, clientId, month, year);
+        data = applyFilters(data, filter);
+        data = applySorting(data, filter);
         return convertToMetricsDTO(data);
     }
 
     @Override
-    public Page<MetricsDTO> getMetricsFilteredPaged(Long clientId, Month month, Integer year, Pageable pageable) {
+    public Page<MetricsDTO> getMetricsFilteredPaged(MetricsFilterDTO filter, Pageable pageable) {
         List<DataClient> data = dataClientRepository.findAll();
-        data = applyFilters(data, clientId, month, year);
+        data = applyFilters(data, filter);
+        data = applySorting(data, filter);
 
         int start = Math.min((int) pageable.getOffset(), data.size());
         int end = Math.min(start + pageable.getPageSize(), data.size());
@@ -51,28 +51,57 @@ public class MetricsServiceImpl implements MetricsService {
         return new PageImpl<>(pagedList, pageable, data.size());
     }
 
-    private List<DataClient> applyFilters(List<DataClient> data, Long clientId, Month month, Integer year) {
-        if (clientId != null) {
+    private List<DataClient> applyFilters(List<DataClient> data, MetricsFilterDTO filter) {
+        if (filter.getSchoolName() != null && !filter.getSchoolName().isEmpty()) {
             data = data.stream()
-                    .filter(dc -> dc.getClient().getClientId().longValue() == clientId)
+                    .filter(dc -> dc.getClient().getSchoolName().toLowerCase()
+                                   .contains(filter.getSchoolName().toLowerCase()))
                     .collect(Collectors.toList());
         }
-        if (month != null) {
+        if (filter.getMonth() != null) {
             data = data.stream()
-                    .filter(dc -> dc.getMonthDate().getMonth().equals(month))
+                    .filter(dc -> dc.getMonthDate().getMonth().equals(filter.getMonth()))
                     .collect(Collectors.toList());
         }
-        if (year != null) {
+        if (filter.getYear() != null) {
             data = data.stream()
-                    .filter(dc -> dc.getMonthDate().getYear() == year)
+                    .filter(dc -> dc.getMonthDate().getYear() == filter.getYear())
                     .collect(Collectors.toList());
         }
         return data;
     }
 
-    // ============================================
-    // CONVERSÃO PARA DTO
-    // ============================================
+    private List<DataClient> applySorting(List<DataClient> data, MetricsFilterDTO filter) {
+        if (filter.getSortBy() != null && !filter.getSortBy().isEmpty()) {
+            Comparator<DataClient> comparator;
+
+            switch (filter.getSortBy()) {
+                case "schoolName":
+                    comparator = Comparator.comparing(dc -> dc.getClient().getSchoolName(), String.CASE_INSENSITIVE_ORDER);
+                    break;
+                case "totalStudentsRegistered":
+                    comparator = Comparator.comparing(DataClient::getRegisteredStudents);
+                    break;
+                case "totalOrdersMonth":
+                    comparator = Comparator.comparing(DataClient::getOrderCount);
+                    break;
+                case "profitPerStudent":
+                    comparator = Comparator.comparing(dc -> dc.getRevenue().subtract(dc.getExpenses())
+                            .divide(BigDecimal.valueOf(dc.getRegisteredStudents() > 0 ? dc.getRegisteredStudents() : 1), 2, RoundingMode.HALF_UP));
+                    break;
+                default:
+                    comparator = Comparator.comparing(dc -> dc.getMonthDate().getMonthValue());
+            }
+
+            if ("desc".equalsIgnoreCase(filter.getSortDirection())) {
+                comparator = comparator.reversed();
+            }
+
+            data = data.stream().sorted(comparator).collect(Collectors.toList());
+        }
+        return data;
+    }
+
     private List<MetricsDTO> convertToMetricsDTO(List<DataClient> data) {
         return data.stream().map(d -> {
             Client client = d.getClient();
@@ -112,9 +141,6 @@ public class MetricsServiceImpl implements MetricsService {
         }).collect(Collectors.toList());
     }
 
-    // ============================================
-    // TODAS AS MÉTRICAS (SEM FILTRO)
-    // ============================================
     @Override
     public List<MetricsDTO> calculateAllMetrics() {
         List<Client> clients = clientRepository.findAll();
