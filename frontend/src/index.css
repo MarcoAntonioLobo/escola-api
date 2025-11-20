@@ -7,8 +7,8 @@
 }
 
 body {
-  background-color: #111827; /* CINZA MUITO ESCURO */
-  color: #f3f4f6; /* texto claro */
+  background-color: #111827;
+  color: #f3f4f6;
   padding: 20px;
 }
 
@@ -93,10 +93,34 @@ input, select {
   transition: 0.2s;
 }
 
+/* Foco nos inputs */
 input:focus, select:focus {
   outline: none;
   border-color: #93c5fd;
   box-shadow: 0 0 0 2px rgba(147,197,253,0.4);
+}
+
+/* REMOVER SETAS INPUT NUMBER */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none; /* Chrome, Safari, Opera */
+  -moz-appearance: none;    /* Firefox */
+  appearance: none;         /* padrão */
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield; /* Firefox */
+  -webkit-appearance: none;   /* Safari/Chrome */
+  appearance: none;            /* padrão */
+}
+
+/* REMOVER SETAS INPUT DATE */
+input[type=date] {
+  -webkit-appearance: none; /* Chrome, Safari */
+  -moz-appearance: none;    /* Firefox */
+  appearance: none;         /* padrão */
+  color: #f3f4f6;
 }
 
 /* Botões */
@@ -123,13 +147,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* PAGINAÇÃO */
+/* Paginação */
 div.pagination {
   display: flex;
-  justify-content: center !important;
+  justify-content: center;
   align-items: center;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   width: 100%;
   padding: 1rem;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
 }

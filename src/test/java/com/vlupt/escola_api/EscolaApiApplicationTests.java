@@ -10,5 +10,6 @@ class EscolaApiApplicationTests {
 
     @Test
     void contextLoads() {
+       
     }
 }

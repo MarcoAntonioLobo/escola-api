@@ -19,4 +19,5 @@ spring:
   sql:
     init:
       mode: always
-      data-locations: classpath:data-test.sql   # <- Aqui você indica o script do teste
+      schema-locations: classpath:schema-test.sql   # <- cria as tabelas antes
+      data-locations: classpath:data-test.sql      # <- popula dados

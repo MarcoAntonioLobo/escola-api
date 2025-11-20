@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Pagination({ page, totalPages, onPageChange }) {
   return (
-    <div className="col-span-full w-full flex justify-center items-center gap-4 my-8">
+    <div className="flex items-center gap-4">
       <button
         disabled={page === 0}
         onClick={() => onPageChange(page - 1)}
@@ -11,7 +11,7 @@ export default function Pagination({ page, totalPages, onPageChange }) {
         Anterior
       </button>
 
-      <span className="text-gray-700 font-medium">
+      <span className="text-gray-100 font-medium">
         Página {page + 1} de {totalPages}
       </span>
 

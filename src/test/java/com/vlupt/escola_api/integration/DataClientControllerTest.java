@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vlupt.escola_api.controller.DataClientController;
+import com.vlupt.escola_api.dto.DataClientFilterDTO;
 import com.vlupt.escola_api.dto.DataClientRequestDTO;
 import com.vlupt.escola_api.dto.DataClientResponseDTO;
 import com.vlupt.escola_api.exception.GlobalExceptionHandler;
@@ -85,14 +86,15 @@ class DataClientControllerTest {
                 .notes("Teste")
                 .build();
 
-        requestDTO = new DataClientRequestDTO();
-        requestDTO.setClientId(client.getClientId());
-        requestDTO.setMonthDate(dataClient.getMonthDate());
-        requestDTO.setRevenue(dataClient.getRevenue());
-        requestDTO.setExpenses(dataClient.getExpenses());
-        requestDTO.setOrderCount(dataClient.getOrderCount());
-        requestDTO.setRegisteredStudents(dataClient.getRegisteredStudents());
-        requestDTO.setNotes(dataClient.getNotes());
+        requestDTO = DataClientRequestDTO.builder()
+                .clientId(client.getClientId())
+                .monthDate(dataClient.getMonthDate())
+                .revenue(dataClient.getRevenue())
+                .expenses(dataClient.getExpenses())
+                .orderCount(dataClient.getOrderCount())
+                .registeredStudents(dataClient.getRegisteredStudents())
+                .notes(dataClient.getNotes())
+                .build();
 
         responseDTO = DataClientResponseDTO.builder()
                 .dataId(dataClient.getDataId())
@@ -106,24 +108,30 @@ class DataClientControllerTest {
                 .build();
     }
 
+    // ===============================
+    // GET ALL
+    // ===============================
     @Test
     void testFindAll() throws Exception {
         when(service.findAll()).thenReturn(List.of(dataClient));
         when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/client-data"))
+        mockMvc.perform(get("/api/client-data"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
                 .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
+    // ===============================
+    // GET BY ID
+    // ===============================
     @Test
     void testFindById() throws Exception {
         when(service.findById(1)).thenReturn(Optional.of(dataClient));
         when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/client-data/1"))
+        mockMvc.perform(get("/api/client-data/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
                 .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
@@ -134,11 +142,14 @@ class DataClientControllerTest {
     void testFindById_NotFound() throws Exception {
         when(service.findById(1)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/client-data/1"))
+        mockMvc.perform(get("/api/client-data/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
+    // ===============================
+    // CREATE
+    // ===============================
     @Test
     void testCreate() throws Exception {
         when(clientService.findById(client.getClientId())).thenReturn(Optional.of(client));
@@ -146,7 +157,7 @@ class DataClientControllerTest {
         when(service.save(dataClient)).thenReturn(dataClient);
         when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
 
-        mockMvc.perform(post("/client-data")
+        mockMvc.perform(post("/api/client-data")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
@@ -159,13 +170,16 @@ class DataClientControllerTest {
     void testCreate_ClientNotFound() throws Exception {
         when(clientService.findById(client.getClientId())).thenReturn(Optional.empty());
 
-        mockMvc.perform(post("/client-data")
+        mockMvc.perform(post("/api/client-data")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
+    // ===============================
+    // UPDATE
+    // ===============================
     @Test
     void testUpdate() throws Exception {
         when(clientService.findById(client.getClientId())).thenReturn(Optional.of(client));
@@ -173,7 +187,7 @@ class DataClientControllerTest {
         when(service.update(1, dataClient)).thenReturn(dataClient);
         when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
 
-        mockMvc.perform(put("/client-data/1")
+        mockMvc.perform(put("/api/client-data/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
@@ -188,16 +202,19 @@ class DataClientControllerTest {
         when(mapper.toEntity(requestDTO, client)).thenReturn(dataClient);
         when(service.update(1, dataClient)).thenThrow(new ResourceNotFoundException("Registro não encontrado"));
 
-        mockMvc.perform(put("/client-data/1")
+        mockMvc.perform(put("/api/client-data/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
+    // ===============================
+    // DELETE
+    // ===============================
     @Test
     void testDelete() throws Exception {
-        mockMvc.perform(delete("/client-data/1"))
+        mockMvc.perform(delete("/api/client-data/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -205,20 +222,40 @@ class DataClientControllerTest {
     void testDelete_NotFound() throws Exception {
         doThrow(new ResourceNotFoundException("Registro não encontrado")).when(service).delete(1);
 
-        mockMvc.perform(delete("/client-data/1"))
+        mockMvc.perform(delete("/api/client-data/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
+    // ===============================
+    // GET BY CLIENT
+    // ===============================
     @Test
     void testFindByClient() throws Exception {
         when(service.findByClientId(client.getClientId())).thenReturn(List.of(dataClient));
         when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
 
-        mockMvc.perform(get("/client-data/client/1"))
+        mockMvc.perform(get("/api/client-data/client/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
                 .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
+    }
+
+    // ===============================
+    // FILTER
+    // ===============================
+    @Test
+    void testFilter() throws Exception {
+        DataClientFilterDTO filterDTO = new DataClientFilterDTO();
+        filterDTO.setClientId(client.getClientId());
+
+        when(service.filter(filterDTO)).thenReturn(List.of(dataClient));
+        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
+
+        mockMvc.perform(get("/api/client-data/filter")
+                        .param("clientId", client.getClientId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()));
     }
 }

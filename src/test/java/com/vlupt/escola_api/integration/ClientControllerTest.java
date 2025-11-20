@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vlupt.escola_api.controller.ClientController;
+import com.vlupt.escola_api.dto.ClientFilterDTO;
 import com.vlupt.escola_api.dto.ClientRequestDTO;
 import com.vlupt.escola_api.exception.GlobalExceptionHandler;
 import com.vlupt.escola_api.exception.ResourceNotFoundException;
@@ -72,16 +74,23 @@ class ClientControllerTest {
         client.setClientId(1);
     }
 
+    // ===============================
+    // CREATE
+    // ===============================
     @Test
     void testCreate_Valid() throws Exception {
         when(service.save(any(Client.class))).thenReturn(client);
 
-        mockMvc.perform(post("/clients")
+        mockMvc.perform(post("/api/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.clientId").value(1))
-                .andExpect(jsonPath("$.schoolName").value("Escola ABC"));
+                .andExpect(jsonPath("$.schoolName").value("Escola ABC"))
+                .andExpect(jsonPath("$.externalId").value("EXT123"))
+                .andExpect(jsonPath("$.cafeteriaName").value("Cantina ABC"))
+                .andExpect(jsonPath("$.location").value("Rua das Flores, 123"))
+                .andExpect(jsonPath("$.studentCount").value(250));
     }
 
     @Test
@@ -93,7 +102,7 @@ class ClientControllerTest {
         invalidDTO.setLocation("");
         invalidDTO.setStudentCount(null);
 
-        mockMvc.perform(post("/clients")
+        mockMvc.perform(post("/api/clients")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidDTO)))
                 .andExpect(status().isBadRequest())
@@ -101,11 +110,14 @@ class ClientControllerTest {
                 .andExpect(jsonPath("$.message").exists());
     }
 
+    // ===============================
+    // UPDATE
+    // ===============================
     @Test
     void testUpdate_Success() throws Exception {
         when(service.update(eq(1), any(Client.class))).thenReturn(client);
 
-        mockMvc.perform(put("/clients/1")
+        mockMvc.perform(put("/api/clients/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
@@ -118,7 +130,7 @@ class ClientControllerTest {
         doThrow(new ResourceNotFoundException("Cliente não encontrado"))
                 .when(service).update(eq(1), any(Client.class));
 
-        mockMvc.perform(put("/clients/1")
+        mockMvc.perform(put("/api/clients/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound())
@@ -126,11 +138,14 @@ class ClientControllerTest {
                 .andExpect(jsonPath("$.message").value("Cliente não encontrado"));
     }
 
+    // ===============================
+    // FIND
+    // ===============================
     @Test
     void testFindAll_Empty() throws Exception {
         when(service.findAll()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/clients")
+        mockMvc.perform(get("/api/clients")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -141,7 +156,7 @@ class ClientControllerTest {
     void testFindById_Found() throws Exception {
         when(service.findById(1)).thenReturn(Optional.of(client));
 
-        mockMvc.perform(get("/clients/1")
+        mockMvc.perform(get("/api/clients/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clientId").value(1))
@@ -152,18 +167,21 @@ class ClientControllerTest {
     void testFindById_NotFound() throws Exception {
         when(service.findById(1)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/clients/1")
+        mockMvc.perform(get("/api/clients/1")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Cliente não encontrado"));
     }
 
+    // ===============================
+    // DELETE
+    // ===============================
     @Test
     void testDelete_Success() throws Exception {
         doNothing().when(service).delete(1);
 
-        mockMvc.perform(delete("/clients/1"))
+        mockMvc.perform(delete("/api/clients/1"))
                 .andExpect(status().isNoContent());
     }
 
@@ -172,9 +190,40 @@ class ClientControllerTest {
         doThrow(new ResourceNotFoundException("Cliente não encontrado"))
                 .when(service).delete(1);
 
-        mockMvc.perform(delete("/clients/1"))
+        mockMvc.perform(delete("/api/clients/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Cliente não encontrado"));
+    }
+
+    // ===============================
+    // FILTER
+    // ===============================
+    @Test
+    void testFilter_Post() throws Exception {
+        ClientFilterDTO filterDTO = new ClientFilterDTO();
+        filterDTO.setSchoolName("Escola");
+
+        when(service.filter(any(ClientFilterDTO.class))).thenReturn(List.of(client));
+
+        mockMvc.perform(post("/api/clients/filter")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filterDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].clientId").value(1))
+                .andExpect(jsonPath("$[0].schoolName").value("Escola ABC"));
+    }
+
+    @Test
+    void testFilter_Get() throws Exception {
+        when(service.filter(any(ClientFilterDTO.class))).thenReturn(List.of(client));
+
+        mockMvc.perform(get("/api/clients/filter")
+                        .param("schoolName", "Escola")
+                        .param("sortBy", "clientId")
+                        .param("sortDirection", "asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].clientId").value(1))
+                .andExpect(jsonPath("$[0].schoolName").value("Escola ABC"));
     }
 }

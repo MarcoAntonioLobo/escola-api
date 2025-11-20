@@ -66,6 +66,9 @@ class DataClientServiceImplTest {
                 .build();
     }
 
+    // ===============================
+    // FIND ALL
+    // ===============================
     @Test
     void testFindAll() {
         when(repository.findAll()).thenReturn(Arrays.asList(dataClient));
@@ -76,6 +79,9 @@ class DataClientServiceImplTest {
         assertEquals(dataClient, result.get(0));
     }
 
+    // ===============================
+    // FIND BY ID
+    // ===============================
     @Test
     void testFindById_Found() {
         when(repository.findById(1)).thenReturn(Optional.of(dataClient));
@@ -95,6 +101,9 @@ class DataClientServiceImplTest {
         assertFalse(result.isPresent());
     }
 
+    // ===============================
+    // SAVE
+    // ===============================
     @Test
     void testSave_Success() {
         when(clientRepository.existsById(client.getClientId())).thenReturn(true);
@@ -130,9 +139,12 @@ class DataClientServiceImplTest {
                 .thenReturn(Optional.of(dataClient));
 
         ConflictException ex = assertThrows(ConflictException.class, () -> service.save(dataClient));
-        assertTrue(ex.getMessage().contains("Já existe registro de dados para esse cliente"));
+        assertTrue(ex.getMessage().contains("Já existe registro para este cliente neste mês"));
     }
 
+    // ===============================
+    // UPDATE
+    // ===============================
     @Test
     void testUpdate_Success() {
         DataClient updated = DataClient.builder()
@@ -165,7 +177,7 @@ class DataClientServiceImplTest {
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
                 () -> service.update(2, dataClient));
-        assertTrue(ex.getMessage().contains("Registro de dados não encontrado"));
+        assertTrue(ex.getMessage().contains("Registro não encontrado"));
     }
 
     @Test
@@ -175,12 +187,12 @@ class DataClientServiceImplTest {
         DataClient existingOther = DataClient.builder()
                 .dataId(2)
                 .client(anotherClient)
-                .monthDate(dataClient.getMonthDate()) // mesmo mês
+                .monthDate(dataClient.getMonthDate())
                 .build();
 
         DataClient toUpdate = DataClient.builder()
                 .client(anotherClient)
-                .monthDate(existingOther.getMonthDate()) // mesmo mês do outro registro
+                .monthDate(existingOther.getMonthDate())
                 .build();
 
         when(repository.findById(1)).thenReturn(Optional.of(dataClient));
@@ -189,9 +201,12 @@ class DataClientServiceImplTest {
                 .thenReturn(Optional.of(existingOther));
 
         ConflictException ex = assertThrows(ConflictException.class, () -> service.update(1, toUpdate));
-        assertTrue(ex.getMessage().contains("Já existe registro de dados para esse cliente"));
+        assertTrue(ex.getMessage().contains("Já existe registro para este cliente neste mês"));
     }
 
+    // ===============================
+    // DELETE
+    // ===============================
     @Test
     void testDelete_Success() {
         when(repository.existsById(1)).thenReturn(true);
@@ -205,9 +220,12 @@ class DataClientServiceImplTest {
         when(repository.existsById(2)).thenReturn(false);
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.delete(2));
-        assertTrue(ex.getMessage().contains("Registro de dados não encontrado"));
+        assertTrue(ex.getMessage().contains("Registro não encontrado"));
     }
 
+    // ===============================
+    // FIND BY CLIENT
+    // ===============================
     @Test
     void testFindByClientId() {
         when(repository.findByClient_ClientId(1)).thenReturn(Arrays.asList(dataClient));

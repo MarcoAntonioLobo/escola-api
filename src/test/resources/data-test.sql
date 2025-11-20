@@ -3,10 +3,7 @@
 -- ===============================
 
 DELETE FROM client_data;
-ALTER TABLE client_data ALTER COLUMN data_id RESTART WITH 1;
-
 DELETE FROM client;
-ALTER TABLE client ALTER COLUMN client_id RESTART WITH 1;
 
 -- ===============================
 -- CLIENTES

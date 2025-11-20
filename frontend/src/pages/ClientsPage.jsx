@@ -3,6 +3,7 @@ import api from "../services/api";
 import { Card, CardContent } from "../components/ui/Card";
 import Pagination from "../components/Pagination";
 import { ArrowUpDown, Printer, Download, MoreVertical } from "lucide-react";
+import "../index.css";
 
 const VALID_SORT_FIELDS = [
   "clientId",
@@ -64,19 +65,19 @@ export default function ClientsPage() {
 
   const SortHeader = ({ field, label }) => (
     <th
-      className="p-2 text-left cursor-pointer select-none"
+      className="p-3 text-left cursor-pointer select-none"
       onClick={() => toggleSort(field)}
     >
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <span>{label}</span>
         <ArrowUpDown
-          size={14}
+          size={16}
           className={`transition-all duration-200 ${
             sortBy === field
               ? direction === "asc"
                 ? "text-green-400 rotate-180"
                 : "text-red-400 rotate-0"
-              : "text-gray-300 opacity-40"
+              : "text-gray-400 opacity-50"
           }`}
         />
       </div>
@@ -110,6 +111,7 @@ export default function ClientsPage() {
       "data:text/csv;charset=utf-8," +
       [headers, ...rows].map((e) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
+
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "clientes.csv");
@@ -119,10 +121,9 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
-      <Card className="relative w-full max-w-6xl">
-        {/* Ícones topo direito */}
-        <div className="absolute top-4 right-4 flex gap-2 z-50">
+    <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex flex-col w-full">
+      <Card className="relative w-full max-w-6xl mx-auto">
+        <div className="absolute top-4 right-4 flex gap-3 z-50">
           <Download
             size={20}
             className="text-gray-100 cursor-pointer hover:text-green-400 transition"
@@ -140,23 +141,21 @@ export default function ClientsPage() {
           />
         </div>
 
-        {/* Filtros no menu kebab */}
         {menuOpen && (
-          <CardContent className="mb-4">
+          <CardContent className="mb-6">
             <input
               type="text"
               placeholder="Digite o nome da escola"
               value={schoolFilter}
               onChange={(e) => setSchoolFilter(e.target.value)}
-              className="p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full"
+              className="p-3 border border-gray-600 rounded-lg bg-gray-900 text-gray-100 w-full"
             />
           </CardContent>
         )}
 
-        {/* Tabela sempre visível */}
-        <CardContent>
+        <CardContent className="mb-6">
           <div className="overflow-x-auto" id="clients-table">
-            <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
+            <table className="min-w-full border border-gray-700 divide-y divide-gray-700 rounded-lg">
               <thead className="bg-gray-700 text-gray-100">
                 <tr>
                   <SortHeader field="clientId" label="ID" />
@@ -171,17 +170,17 @@ export default function ClientsPage() {
                 {clients.length > 0 ? (
                   clients.map((c) => (
                     <tr key={c.clientId} className="hover:bg-gray-700">
-                      <td className="p-2">{c.clientId}</td>
-                      <td className="p-2">{c.externalId}</td>
-                      <td className="p-2">{c.schoolName}</td>
-                      <td className="p-2">{c.cafeteriaName}</td>
-                      <td className="p-2">{c.location}</td>
-                      <td className="p-2">{c.studentCount}</td>
+                      <td className="p-3">{c.clientId}</td>
+                      <td className="p-3">{c.externalId}</td>
+                      <td className="p-3">{c.schoolName}</td>
+                      <td className="p-3">{c.cafeteriaName}</td>
+                      <td className="p-3">{c.location}</td>
+                      <td className="p-3">{c.studentCount}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center p-4 text-gray-400">
+                    <td colSpan="6" className="text-center p-6 text-gray-400">
                       Nenhum dado disponível
                     </td>
                   </tr>
@@ -189,11 +188,12 @@ export default function ClientsPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Paginação */}
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
+
+      <div className="flex justify-center mt-8 mb-8 w-full">
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      </div>
     </div>
   );
 }

@@ -16,9 +16,10 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vlupt.escola_api.exception.ConflictException;
 import com.vlupt.escola_api.exception.ResourceNotFoundException;
@@ -29,7 +30,8 @@ import com.vlupt.escola_api.repository.DataClientRepository;
 import com.vlupt.escola_api.service.impl.ClientServiceImpl;
 import com.vlupt.escola_api.service.impl.DataClientServiceImpl;
 
-class ServiceIntegrationTest {
+@ExtendWith(MockitoExtension.class)
+class ServiceIntegrationTestWithMocks {
 
     @Mock
     private ClientRepository clientRepository;
@@ -48,8 +50,6 @@ class ServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
         client = Client.builder()
                 .clientId(1)
                 .externalId("EXT123")
@@ -82,7 +82,7 @@ class ServiceIntegrationTest {
         // --- Criando registro de dados ---
         when(clientRepository.existsById(client.getClientId())).thenReturn(true);
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
-            .thenReturn(Optional.empty());
+                .thenReturn(Optional.empty());
         when(dataClientRepository.save(dataClient)).thenReturn(dataClient);
 
         DataClient savedData = dataClientService.save(dataClient);
@@ -93,7 +93,7 @@ class ServiceIntegrationTest {
 
         // --- Tentando criar registro duplicado (conflito) ---
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
-            .thenReturn(Optional.of(dataClient));
+                .thenReturn(Optional.of(dataClient));
 
         ConflictException exception = assertThrows(ConflictException.class, () -> {
             dataClientService.save(dataClient);
@@ -113,7 +113,7 @@ class ServiceIntegrationTest {
 
         when(dataClientRepository.findById(1)).thenReturn(Optional.of(dataClient));
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), updatedData.getMonthDate()))
-            .thenReturn(Optional.empty());
+                .thenReturn(Optional.empty());
         when(dataClientRepository.save(any(DataClient.class))).thenReturn(updatedData);
 
         DataClient resultUpdate = dataClientService.update(1, updatedData);
