@@ -1,4 +1,4 @@
-/* RESET */
+
 * {
   margin: 0;
   padding: 0;
@@ -12,7 +12,6 @@ body {
   padding: 20px;
 }
 
-/* Cabeçalho */
 header {
   background-color: #0f172a;
   color: white;
@@ -25,7 +24,6 @@ header {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
-/* Navegação */
 nav {
   background-color: #1e293b;
   padding: 1rem;
@@ -82,7 +80,6 @@ tbody tr:hover {
   background-color: #334155;
 }
 
-/* Inputs e selects */
 input, select {
   padding: 0.75rem 1rem;
   border-radius: 0.8rem;
@@ -93,14 +90,12 @@ input, select {
   transition: 0.2s;
 }
 
-/* Foco nos inputs */
 input:focus, select:focus {
   outline: none;
   border-color: #93c5fd;
   box-shadow: 0 0 0 2px rgba(147,197,253,0.4);
 }
 
-/* REMOVER SETAS INPUT NUMBER */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none; /* Chrome, Safari, Opera */
@@ -115,7 +110,7 @@ input[type=number] {
   appearance: none;            /* padrão */
 }
 
-/* REMOVER SETAS INPUT DATE */
+
 input[type=date] {
   -webkit-appearance: none; /* Chrome, Safari */
   -moz-appearance: none;    /* Firefox */
@@ -123,7 +118,7 @@ input[type=date] {
   color: #f3f4f6;
 }
 
-/* Botões */
+
 button {
   padding: 0.75rem 1.2rem;
   border-radius: 0.9rem;
@@ -147,19 +142,65 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Paginação */
-div.pagination {
+/* Container da paginação */
+.pagination-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 1rem;
+  gap: 0.6rem;
   margin-top: 2.5rem;
-  width: 100%;
-  padding: 1rem;
 }
 
-.pagination-wrapper {
+/* Botões anteriores/próximos */
+.pagination-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 0.6rem;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #1e293b;
+  color: #f3f4f6;
+  border: 1px solid #334155;
+  transition: 0.2s;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #334155;
+  border-color: #475569;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Área dos números */
+.pagination-numbers {
   display: flex;
-  justify-content: center;
-  margin: 2rem 0;
+  gap: 0.4rem;
+}
+
+/* Botões das páginas */
+.pagination-number {
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: #1f2937;
+  color: #d1d5db;
+  border: 1px solid #374151;
+  transition: 0.2s;
+}
+
+.pagination-number:hover {
+  background-color: #4b5563;
+  color: white;
+}
+
+/* Página ativa */
+.pagination-number.active {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+  color: white;
+  box-shadow: 0 0 8px rgba(59,130,246,0.5);
 }

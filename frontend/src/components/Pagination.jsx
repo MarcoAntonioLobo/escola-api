@@ -1,26 +1,50 @@
 import React from "react";
+import "../index.css";
 
 export default function Pagination({ page, totalPages, onPageChange }) {
+  const maxButtons = 5;
+
+  const startPage = Math.max(0, page - Math.floor(maxButtons / 2));
+  const endPage = Math.min(totalPages - 1, startPage + maxButtons - 1);
+
+  const pages = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
   return (
-    <div className="flex items-center gap-4">
+    <div className="pagination-container">
+      {/* Botão ANTERIOR */}
       <button
         disabled={page === 0}
         onClick={() => onPageChange(page - 1)}
-        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-xl disabled:opacity-50 hover:bg-gray-400 transition"
+        className="pagination-btn"
       >
-        Anterior
+        ◀
       </button>
 
-      <span className="text-gray-100 font-medium">
-        Página {page + 1} de {totalPages}
-      </span>
+      {/* Botões numéricos */}
+      <div className="pagination-numbers">
+        {pages.map((num) => (
+          <button
+            key={num}
+            onClick={() => onPageChange(num)}
+            className={`pagination-number ${
+              num === page ? "active" : ""
+            }`}
+          >
+            {num + 1}
+          </button>
+        ))}
+      </div>
 
+      {/* Botão PRÓXIMO */}
       <button
-        disabled={page + 1 >= totalPages}
+        disabled={page === totalPages - 1}
         onClick={() => onPageChange(page + 1)}
-        className="px-4 py-2 bg-gray-300 text-gray-800 rounded-xl disabled:opacity-50 hover:bg-gray-400 transition"
+        className="pagination-btn"
       >
-        Próxima
+        ▶
       </button>
     </div>
   );
