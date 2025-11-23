@@ -29,7 +29,6 @@ export default function DataClientPage() {
   const [dateStartFilter, setDateStartFilter] = useState("");
   const [dateEndFilter, setDateEndFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
   // ================================
@@ -104,7 +103,11 @@ export default function DataClientPage() {
         <ArrowUpDown
           size={14}
           className={`transition-all duration-200 ${
-            sortBy === field ? (direction === "asc" ? "text-green-400 rotate-180" : "text-red-400 rotate-0") : "text-gray-300 opacity-40"
+            sortBy === field
+              ? direction === "asc"
+                ? "text-green-400 rotate-180"
+                : "text-red-400 rotate-0"
+              : "text-gray-300 opacity-40"
           }`}
         />
       </div>
@@ -149,9 +152,8 @@ export default function DataClientPage() {
           </tr>
         </thead>
         <tbody>
-          ${data
-            .map(
-              (d) => `
+          ${data.map(
+            (d) => `
             <tr>
               <td>${d.dataId}</td>
               <td>${d.clientId}</td>
@@ -162,8 +164,7 @@ export default function DataClientPage() {
               <td>${d.registeredStudents}</td>
               <td>${d.notes || ""}</td>
             </tr>`
-            )
-            .join("")}
+          ).join("")}
         </tbody>
       </table>
     `;
@@ -188,20 +189,14 @@ export default function DataClientPage() {
         </div>
 
         {menuOpen && (
-          <CardContent className="mb-4 flex flex-col gap-2">
+          <CardContent className="mb-6 flex flex-col gap-2">
             <input placeholder="ID Cliente" type="number" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 no-spin" />
             <input placeholder="Data Inicial" type="date" value={dateStartFilter} onChange={(e) => setDateStartFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
             <input placeholder="Data Final" type="date" value={dateEndFilter} onChange={(e) => setDateEndFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
-            <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-40">
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
           </CardContent>
         )}
 
-        <CardContent>
+        <CardContent className="mb-6">
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
               <thead className="bg-gray-700 text-gray-100">
@@ -236,11 +231,21 @@ export default function DataClientPage() {
               </tbody>
             </table>
           </div>
-
-          <div className="w-full flex justify-center mt-6">
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
         </CardContent>
+
+        {/* PAGINAÇÃO + LINHAS POR PÁGINA */}
+        <div className="flex justify-between items-center mt-4 mb-8 w-full">
+          <div>
+            <span>Linhas por página: </span>
+            <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100">
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
       </Card>
     </div>
   );

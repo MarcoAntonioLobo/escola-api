@@ -47,7 +47,7 @@ export default function MetricsPage() {
       const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
       setAllMetrics(data);
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao carregar métricas:", err);
       setAllMetrics([]);
     }
   }, [schoolFilter, monthYearFilter]);
@@ -88,6 +88,9 @@ export default function MetricsPage() {
     setMetrics(sorted.slice(start, end));
   }, [allMetrics, sortBy, direction, page, rowsPerPage]);
 
+  // ================================
+  // TROCAR TIPO DE ORDENAÇÃO
+  // ================================
   const toggleSort = (field) => {
     if (!VALID_SORT_FIELDS.includes(field)) return;
     if (sortBy === field) setDirection(direction === "asc" ? "desc" : "asc");
@@ -104,7 +107,11 @@ export default function MetricsPage() {
         <ArrowUpDown
           size={14}
           className={`transition-all duration-200 ${
-            sortBy === field ? (direction === "asc" ? "text-green-400 rotate-180" : "text-red-400 rotate-0") : "text-gray-300 opacity-40"
+            sortBy === field
+              ? direction === "asc"
+                ? "text-green-400 rotate-180"
+                : "text-red-400 rotate-0"
+              : "text-gray-300 opacity-40"
           }`}
         />
       </div>
@@ -117,6 +124,9 @@ export default function MetricsPage() {
     return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(2025, monthNumber, 1));
   };
 
+  // ================================
+  // DOWNLOAD CSV
+  // ================================
   const downloadCSV = () => {
     if (!allMetrics.length) return;
     const headers = ["Cliente", "Alunos Registrados", "% Registrados", "Ticket Médio", "Lucro/Aluno", "Pedidos", "Mês"];
@@ -136,6 +146,9 @@ export default function MetricsPage() {
     link.click();
   };
 
+  // ================================
+  // IMPRESSÃO
+  // ================================
   const handlePrint = () => {
     if (!metrics.length) return;
 
@@ -153,9 +166,8 @@ export default function MetricsPage() {
           </tr>
         </thead>
         <tbody>
-          ${metrics
-            .map(
-              (m) => `
+          ${metrics.map(
+            (m) => `
             <tr>
               <td>${m.schoolName || ""}</td>
               <td>${m.totalStudentsRegistered || 0}</td>
@@ -164,13 +176,12 @@ export default function MetricsPage() {
               <td>R$ ${Number(m.profitPerStudent || 0).toFixed(2)}</td>
               <td>${m.totalOrdersMonth || 0}</td>
               <td>${formatMonth(m.month)}</td>
-            </tr>
-          `
-            )
-            .join("")}
+            </tr>`
+          ).join("")}
         </tbody>
       </table>
     `;
+
     const WinPrint = window.open("", "", "width=900,height=650");
     WinPrint.document.write("<html><head><title>Métricas</title></head><body>");
     WinPrint.document.write("<h2 style='text-align:center;'>Métricas</h2>");
@@ -185,26 +196,33 @@ export default function MetricsPage() {
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
+        {/* BOTÕES DE CSV, PRINT E MENU */}
         <div className="absolute top-4 right-4 flex gap-2 z-50">
           <Download size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
           <Printer size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
           <MoreVertical size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
 
+        {/* FILTROS */}
         {menuOpen && (
-          <CardContent className="mb-4 flex flex-col gap-2">
-            <input placeholder="Cliente" value={schoolFilter} onChange={(e) => setSchoolFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full" />
-            <input placeholder="Mês/Ano (MM/YYYY)" value={monthYearFilter} onChange={(e) => setMonthYearFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full" />
-            <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-40">
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
+          <CardContent className="mb-6 flex flex-col gap-2">
+            <input
+              placeholder="Cliente"
+              value={schoolFilter}
+              onChange={(e) => setSchoolFilter(e.target.value)}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full"
+            />
+            <input
+              placeholder="Mês/Ano (MM/YYYY)"
+              value={monthYearFilter}
+              onChange={(e) => setMonthYearFilter(e.target.value)}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full"
+            />
           </CardContent>
         )}
 
-        <CardContent>
+        {/* TABELA */}
+        <CardContent className="mb-6">
           <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
               <thead className="bg-gray-700 text-gray-100">
@@ -237,11 +255,25 @@ export default function MetricsPage() {
               </tbody>
             </table>
           </div>
-
-          <div className="w-full flex justify-center mt-6">
-            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-          </div>
         </CardContent>
+
+        {/* PAGINAÇÃO + LINHAS POR PÁGINA */}
+        <div className="flex justify-between items-center mt-4 mb-8 w-full">
+          <div>
+            <span>Linhas por página: </span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
       </Card>
     </div>
   );

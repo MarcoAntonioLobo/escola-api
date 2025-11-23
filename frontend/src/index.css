@@ -61,6 +61,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  margin-bottom: 2rem;
   border-radius: 0.6rem;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -86,6 +87,7 @@ tbody tr {
 tbody tr:hover {
   background-color: #334155;
 }
+
 
 /* =========================
    INPUTS & SELECTS
@@ -249,7 +251,7 @@ button:disabled {
 .more-button {
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  right: 2rem; /* afastado da tabela e do topo */
   z-index: 50;
   padding: 0.5rem;
   border-radius: 0.6rem;
