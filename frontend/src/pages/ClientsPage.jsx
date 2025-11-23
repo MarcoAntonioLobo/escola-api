@@ -15,8 +15,8 @@ const VALID_SORT_FIELDS = [
 ];
 
 export default function ClientsPage() {
-  const [allClients, setAllClients] = useState([]); // <- AQUI FICA TUDO
-  const [clients, setClients] = useState([]); // <- SOMENTE A PÁGINA EXIBIDA
+  const [allClients, setAllClients] = useState([]);
+  const [clients, setClients] = useState([]);
 
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -26,11 +26,10 @@ export default function ClientsPage() {
 
   const [schoolFilter, setSchoolFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
   // ================================
-  // BUSCA TUDO DO BACKEND (SEM PAGINAR)
+  // FETCH DO BACKEND (SEM PAGINAÇÃO)
   // ================================
   const fetchClients = useCallback(async () => {
     try {
@@ -38,10 +37,8 @@ export default function ClientsPage() {
       if (schoolFilter) params.schoolName = schoolFilter;
 
       const res = await api.get("/clients/filter", { params });
-
       const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
-
-      setAllClients(data); // <- guarda tudo
+      setAllClients(data);
     } catch (err) {
       console.error("Erro ao carregar clientes:", err);
       setAllClients([]);
@@ -49,7 +46,7 @@ export default function ClientsPage() {
   }, [schoolFilter]);
 
   // ================================
-  // EXECUTA O FETCH COM DEBOUNCE PARA O FILTRO
+  // DEBOUNCE PARA FILTRO
   // ================================
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -60,7 +57,7 @@ export default function ClientsPage() {
   }, [schoolFilter, fetchClients]);
 
   // ================================
-  // APLICA ORDENAÇÃO + PAGINAÇÃO LOCAL
+  // PAGINAÇÃO + ORDENAÇÃO LOCAL
   // ================================
   useEffect(() => {
     if (!allClients.length) {
@@ -69,8 +66,7 @@ export default function ClientsPage() {
       return;
     }
 
-    // Ordena localmente
-    let sorted = [...allClients].sort((a, b) => {
+    const sorted = [...allClients].sort((a, b) => {
       const fieldA = a[sortBy];
       const fieldB = b[sortBy];
 
@@ -79,13 +75,11 @@ export default function ClientsPage() {
       return 0;
     });
 
-    // Corta somente a página
     const start = page * rowsPerPage;
     const end = start + rowsPerPage;
 
     setTotalPages(Math.ceil(sorted.length / rowsPerPage));
     setClients(sorted.slice(start, end));
-
   }, [allClients, sortBy, direction, page, rowsPerPage]);
 
   // ================================
@@ -93,9 +87,8 @@ export default function ClientsPage() {
   // ================================
   const toggleSort = (field) => {
     if (!VALID_SORT_FIELDS.includes(field)) return;
-    if (sortBy === field) {
-      setDirection(direction === "asc" ? "desc" : "asc");
-    } else {
+    if (sortBy === field) setDirection(direction === "asc" ? "desc" : "asc");
+    else {
       setSortBy(field);
       setDirection("asc");
     }
@@ -140,7 +133,6 @@ export default function ClientsPage() {
       "data:text/csv;charset=utf-8," +
       [headers, ...rows].map((e) => e.join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
-
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", "clientes.csv");
@@ -150,13 +142,45 @@ export default function ClientsPage() {
   };
 
   // ================================
-  // IMPRESSÃO
+  // IMPRESSÃO PADRÃO
   // ================================
   const handlePrint = () => {
-    const printContent = document.getElementById("clients-table");
+    if (!allClients.length) return;
+
+    const tableHtml = `
+      <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="background-color: #444; color: #fff;">
+            <th>ID</th>
+            <th>ID Externo</th>
+            <th>Escola</th>
+            <th>Cantina</th>
+            <th>Localização</th>
+            <th>Total Alunos</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allClients
+            .map(
+              (c) => `
+            <tr>
+              <td>${c.clientId}</td>
+              <td>${c.externalId}</td>
+              <td>${c.schoolName}</td>
+              <td>${c.cafeteriaName}</td>
+              <td>${c.location}</td>
+              <td>${c.studentCount}</td>
+            </tr>`
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+
     const WinPrint = window.open("", "", "width=900,height=650");
     WinPrint.document.write("<html><head><title>Clientes</title></head><body>");
-    WinPrint.document.write(printContent.outerHTML);
+    WinPrint.document.write("<h2 style='text-align:center;'>Clientes</h2>");
+    WinPrint.document.write(tableHtml);
     WinPrint.document.write("</body></html>");
     WinPrint.document.close();
     WinPrint.focus();
@@ -214,7 +238,7 @@ export default function ClientsPage() {
         )}
 
         <CardContent className="mb-6">
-          <div className="overflow-x-auto" id="clients-table">
+          <div className="overflow-x-auto">
             <table className="min-w-full border border-gray-700 divide-y divide-gray-700 rounded-lg">
               <thead className="bg-gray-700 text-gray-100">
                 <tr>

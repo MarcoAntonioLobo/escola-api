@@ -1,4 +1,6 @@
-
+/* =========================
+   GLOBAL / RESET
+========================= */
 * {
   margin: 0;
   padding: 0;
@@ -12,6 +14,9 @@ body {
   padding: 20px;
 }
 
+/* =========================
+   HEADER & NAV
+========================= */
 header {
   background-color: #0f172a;
   color: white;
@@ -49,7 +54,9 @@ nav a:hover {
   color: white;
 }
 
-/* Tabelas */
+/* =========================
+   TABLES
+========================= */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -80,6 +87,9 @@ tbody tr:hover {
   background-color: #334155;
 }
 
+/* =========================
+   INPUTS & SELECTS
+========================= */
 input, select {
   padding: 0.75rem 1rem;
   border-radius: 0.8rem;
@@ -98,27 +108,28 @@ input:focus, select:focus {
 
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none; /* Chrome, Safari, Opera */
-  -moz-appearance: none;    /* Firefox */
-  appearance: none;         /* padrão */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 input[type=number] {
-  -moz-appearance: textfield; /* Firefox */
-  -webkit-appearance: none;   /* Safari/Chrome */
-  appearance: none;            /* padrão */
+  -moz-appearance: textfield;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-
 input[type=date] {
-  -webkit-appearance: none; /* Chrome, Safari */
-  -moz-appearance: none;    /* Firefox */
-  appearance: none;         /* padrão */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   color: #f3f4f6;
 }
 
-
+/* =========================
+   BUTTONS
+========================= */
 button {
   padding: 0.75rem 1.2rem;
   border-radius: 0.9rem;
@@ -142,7 +153,9 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Container da paginação */
+/* =========================
+   PAGINATION
+========================= */
 .pagination-container {
   display: flex;
   justify-content: center;
@@ -151,7 +164,6 @@ button:disabled {
   margin-top: 2.5rem;
 }
 
-/* Botões anteriores/próximos */
 .pagination-btn {
   padding: 0.6rem 1rem;
   border-radius: 0.6rem;
@@ -174,13 +186,11 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Área dos números */
 .pagination-numbers {
   display: flex;
   gap: 0.4rem;
 }
 
-/* Botões das páginas */
 .pagination-number {
   padding: 0.55rem 0.9rem;
   border-radius: 0.6rem;
@@ -197,10 +207,84 @@ button:disabled {
   color: white;
 }
 
-/* Página ativa */
 .pagination-number.active {
   background-color: #2563eb;
   border-color: #3b82f6;
   color: white;
   box-shadow: 0 0 8px rgba(59,130,246,0.5);
+}
+
+/* =========================
+   ACTION BUTTONS (LEFT)
+========================= */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+}
+
+.action-buttons svg {
+  padding: 0.5rem;
+  border-radius: 0.6rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  cursor: pointer;
+  color: #f3f4f6;
+  transition: all 0.2s;
+}
+
+.action-buttons svg:hover {
+  background-color: #334155;
+  border-color: #475569;
+  color: #10b981;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* =========================
+   MORE VERTICAL (RIGHT)
+========================= */
+.more-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  padding: 0.5rem;
+  border-radius: 0.6rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  cursor: pointer;
+  color: #f3f4f6;
+  transition: all 0.2s;
+}
+
+.more-button:hover {
+  background-color: #334155;
+  border-color: #475569;
+  color: #10b981;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #f3f4f6;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.icon-button:hover {
+  background-color: #334155;
+  border-color: #475569;
+  color: #10b981;
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
 }
