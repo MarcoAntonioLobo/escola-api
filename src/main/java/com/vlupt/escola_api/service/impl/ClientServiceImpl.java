@@ -24,10 +24,10 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public List<Client> filter(ClientFilterDTO filter) {
-        // Ajusta sort padrão
+
         Sort sort = Sort.unsorted();
         if (filter.getSortBy() != null && !filter.getSortBy().isBlank()) {
-            // Verifica se o campo existe na entidade Client antes de aplicar o sort
+
             switch (filter.getSortBy()) {
                 case "clientId":
                 case "schoolName":
@@ -40,13 +40,12 @@ public class ClientServiceImpl implements ClientService {
                             : Sort.by(filter.getSortBy()).ascending();
                     break;
                 default:
-                    // Campo inválido: não aplica sort
+
                     sort = Sort.unsorted();
                     break;
             }
         }
 
-        // Se clientId for null ou 0, ignora filtro
         if (filter.getClientId() != null && filter.getClientId() == 0) {
             filter.setClientId(null);
         }

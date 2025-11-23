@@ -14,21 +14,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MetricsDTO {
 
-	private String schoolName;
-	
-	private int totalStudentsSchool;
-	
-	private int totalStudentsRegistered;
-	
+	private String schoolName;	
+	private int totalStudentsSchool;	
+	private int totalStudentsRegistered;	
 	private BigDecimal studentsRegisteredVsTotal;
-
 	private BigDecimal profitPerStudent;
-
 	private BigDecimal averageTicket;
-
 	private double averageOrdersPerStudent;
-
 	private int totalOrdersMonth;
-
 	private Month month;
 }

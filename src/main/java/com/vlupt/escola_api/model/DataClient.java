@@ -35,7 +35,7 @@ public class DataClient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer dataId;
 
-    @ManyToOne(fetch = FetchType.EAGER) // <-- ALTERADO AQUI
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;
 

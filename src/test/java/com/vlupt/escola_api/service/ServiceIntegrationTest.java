@@ -73,13 +73,12 @@ class ServiceIntegrationTestWithMocks {
 
     @Test
     void testClientAndDataClientFlow() {
-        // --- Criando cliente ---
+
         when(clientRepository.save(client)).thenReturn(client);
         Client savedClient = clientService.save(client);
         assertNotNull(savedClient);
         assertEquals(client.getClientId(), savedClient.getClientId());
 
-        // --- Criando registro de dados ---
         when(clientRepository.existsById(client.getClientId())).thenReturn(true);
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
                 .thenReturn(Optional.empty());
@@ -91,7 +90,6 @@ class ServiceIntegrationTestWithMocks {
         assertEquals(200, savedData.getRegisteredStudents());
         assertEquals(50, savedData.getOrderCount());
 
-        // --- Tentando criar registro duplicado (conflito) ---
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
                 .thenReturn(Optional.of(dataClient));
 
@@ -100,7 +98,6 @@ class ServiceIntegrationTestWithMocks {
         });
         assertTrue(exception.getMessage().contains("Já existe registro de dados para esse cliente"));
 
-        // --- Atualizando registro de dados ---
         DataClient updatedData = DataClient.builder()
                 .client(client)
                 .monthDate(dataClient.getMonthDate())
@@ -122,13 +119,11 @@ class ServiceIntegrationTestWithMocks {
         assertEquals(220, resultUpdate.getRegisteredStudents());
         assertEquals(60, resultUpdate.getOrderCount());
 
-        // --- Deletando registro de dados ---
         when(dataClientRepository.existsById(1)).thenReturn(true);
         doNothing().when(dataClientRepository).deleteById(1);
         dataClientService.delete(1);
         verify(dataClientRepository, times(1)).deleteById(1);
 
-        // --- Deletando cliente ---
         when(clientRepository.existsById(client.getClientId())).thenReturn(true);
         doNothing().when(clientRepository).deleteById(client.getClientId());
         clientService.delete(client.getClientId());

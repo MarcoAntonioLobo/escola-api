@@ -7,11 +7,8 @@ import lombok.Data;
 public class DataClientFilterDTO {
 
     private Integer clientId;
-
     private LocalDate dateStart;
-
     private LocalDate dateEnd;
-
     private String sortBy;
     private String direction;
 }

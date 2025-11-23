@@ -18,9 +18,7 @@ public interface DataClientService {
 
     void delete(Integer id);
 
-    // FILTRO COM SPECIFICATION
     List<DataClient> filter(DataClientFilterDTO filter);
 
-    // LISTAR DADOS POR CLIENTE
     List<DataClient> findByClientId(Integer clientId);
 }

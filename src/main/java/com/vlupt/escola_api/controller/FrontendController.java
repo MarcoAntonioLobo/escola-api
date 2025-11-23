@@ -8,6 +8,6 @@ public class FrontendController {
 
     @GetMapping(value = {"/", "/clients", "/data", "/metrics"})
     public String index() {
-        return "index.html"; // Serve o build do React
+        return "index.html";
     }
 }

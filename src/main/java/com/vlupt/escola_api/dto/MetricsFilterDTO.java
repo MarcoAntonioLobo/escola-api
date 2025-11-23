@@ -5,7 +5,8 @@ import lombok.Data;
 
 @Data
 public class MetricsFilterDTO {
-    private String schoolName; // substituído de clientId
+	
+    private String schoolName;
     private Month month;
     private Integer year;
     private String sortBy;

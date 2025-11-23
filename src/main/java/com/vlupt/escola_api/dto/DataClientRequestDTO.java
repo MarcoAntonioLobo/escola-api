@@ -15,16 +15,10 @@ import lombok.NoArgsConstructor;
 public class DataClientRequestDTO {
 
     private Integer clientId;
-
     private LocalDate monthDate;
-
     private BigDecimal revenue;
-
     private BigDecimal expenses;
-
     private Integer orderCount;
-
     private Integer registeredStudents;
-
     private String notes;
 }

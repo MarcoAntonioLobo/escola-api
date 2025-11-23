@@ -19,5 +19,5 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: classpath:schema-test.sql   # <- cria as tabelas antes
-      data-locations: classpath:data-test.sql      # <- popula dados
+      schema-locations: classpath:schema-test.sql
+      data-locations: classpath:data-test.sql

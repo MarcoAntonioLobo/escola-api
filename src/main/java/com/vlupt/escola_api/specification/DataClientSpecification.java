@@ -17,17 +17,14 @@ public class DataClientSpecification {
 
             List<Predicate> predicates = new ArrayList<>();
 
-            // FILTRO POR CLIENTE
             if (filter.getClientId() != null) {
                 predicates.add(cb.equal(root.get("client").get("clientId"), filter.getClientId()));
             }
 
-            // FILTRO POR DATA >=
             if (filter.getDateStart() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("monthDate"), filter.getDateStart()));
             }
 
-            // FILTRO POR DATA <=
             if (filter.getDateEnd() != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("monthDate"), filter.getDateEnd()));
             }

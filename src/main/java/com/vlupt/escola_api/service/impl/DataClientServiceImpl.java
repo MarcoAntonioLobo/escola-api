@@ -52,7 +52,6 @@ public class DataClientServiceImpl implements DataClientService {
 
         validateClient(data.getClient());
 
-        // se mudou mês ou cliente → verificar conflito
         if (!existing.getMonthDate().equals(data.getMonthDate())
                 || !existing.getClient().getClientId().equals(data.getClient().getClientId())) {
             checkConflict(data);
@@ -77,7 +76,6 @@ public class DataClientServiceImpl implements DataClientService {
         repository.deleteById(id);
     }
 
-    // NOVO FILTRO + ORDENACAO
     @Override
     public List<DataClient> filter(DataClientFilterDTO filter) {
 

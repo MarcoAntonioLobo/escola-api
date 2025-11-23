@@ -84,7 +84,6 @@ class MetricsServiceFullTest {
 
         for (MetricsDTO metric : metrics) {
 
-            // Encontrar o DataClient correspondente ao DTO (cliente + mês)
             DataClient data = allDataClients.stream()
                     .filter(d -> d.getClient().getSchoolName().equals(metric.getSchoolName()))
                     .filter(d -> d.getMonthDate().getMonth().equals(metric.getMonth()))
