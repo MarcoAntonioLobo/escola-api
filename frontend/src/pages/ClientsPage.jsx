@@ -15,7 +15,9 @@ const VALID_SORT_FIELDS = [
 ];
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState([]);
+  const [allClients, setAllClients] = useState([]); // <- AQUI FICA TUDO
+  const [clients, setClients] = useState([]); // <- SOMENTE A PÁGINA EXIBIDA
+
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -25,22 +27,30 @@ export default function ClientsPage() {
   const [schoolFilter, setSchoolFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+
+  // ================================
+  // BUSCA TUDO DO BACKEND (SEM PAGINAR)
+  // ================================
   const fetchClients = useCallback(async () => {
     try {
-      const params = { page, size: 5, sortBy, direction };
+      const params = {};
       if (schoolFilter) params.schoolName = schoolFilter;
 
       const res = await api.get("/clients/filter", { params });
+
       const data = Array.isArray(res.data) ? res.data : res.data?.content || [];
-      setClients(data);
-      setTotalPages(res.data?.totalPages || 1);
+
+      setAllClients(data); // <- guarda tudo
     } catch (err) {
       console.error("Erro ao carregar clientes:", err);
-      setClients([]);
-      setTotalPages(1);
+      setAllClients([]);
     }
-  }, [page, sortBy, direction, schoolFilter]);
+  }, [schoolFilter]);
 
+  // ================================
+  // EXECUTA O FETCH COM DEBOUNCE PARA O FILTRO
+  // ================================
   useEffect(() => {
     const handler = setTimeout(() => {
       setPage(0);
@@ -49,10 +59,38 @@ export default function ClientsPage() {
     return () => clearTimeout(handler);
   }, [schoolFilter, fetchClients]);
 
+  // ================================
+  // APLICA ORDENAÇÃO + PAGINAÇÃO LOCAL
+  // ================================
   useEffect(() => {
-    fetchClients();
-  }, [page, sortBy, direction, fetchClients]);
+    if (!allClients.length) {
+      setClients([]);
+      setTotalPages(1);
+      return;
+    }
 
+    // Ordena localmente
+    let sorted = [...allClients].sort((a, b) => {
+      const fieldA = a[sortBy];
+      const fieldB = b[sortBy];
+
+      if (fieldA < fieldB) return direction === "asc" ? -1 : 1;
+      if (fieldA > fieldB) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    // Corta somente a página
+    const start = page * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    setTotalPages(Math.ceil(sorted.length / rowsPerPage));
+    setClients(sorted.slice(start, end));
+
+  }, [allClients, sortBy, direction, page, rowsPerPage]);
+
+  // ================================
+  // TROCAR TIPO DE ORDENAÇÃO
+  // ================================
   const toggleSort = (field) => {
     if (!VALID_SORT_FIELDS.includes(field)) return;
     if (sortBy === field) {
@@ -84,22 +122,13 @@ export default function ClientsPage() {
     </th>
   );
 
-  const handlePrint = () => {
-    const printContent = document.getElementById("clients-table");
-    const WinPrint = window.open("", "", "width=900,height=650");
-    WinPrint.document.write("<html><head><title>Clientes</title></head><body>");
-    WinPrint.document.write(printContent.outerHTML);
-    WinPrint.document.write("</body></html>");
-    WinPrint.document.close();
-    WinPrint.focus();
-    WinPrint.print();
-    WinPrint.close();
-  };
-
+  // ================================
+  // DOWNLOAD CSV
+  // ================================
   const handleDownload = () => {
-    if (!clients.length) return;
+    if (!allClients.length) return;
     const headers = ["ID", "ID Externo", "Escola", "Cantina", "Localização", "Total Alunos"];
-    const rows = clients.map((c) => [
+    const rows = allClients.map((c) => [
       c.clientId,
       c.externalId,
       c.schoolName,
@@ -120,6 +149,24 @@ export default function ClientsPage() {
     document.body.removeChild(link);
   };
 
+  // ================================
+  // IMPRESSÃO
+  // ================================
+  const handlePrint = () => {
+    const printContent = document.getElementById("clients-table");
+    const WinPrint = window.open("", "", "width=900,height=650");
+    WinPrint.document.write("<html><head><title>Clientes</title></head><body>");
+    WinPrint.document.write(printContent.outerHTML);
+    WinPrint.document.write("</body></html>");
+    WinPrint.document.close();
+    WinPrint.focus();
+    WinPrint.print();
+    WinPrint.close();
+  };
+
+  // ================================
+  // COMPONENTE FINAL
+  // ================================
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex flex-col w-full">
       <Card className="relative w-full max-w-6xl mx-auto">
@@ -142,7 +189,7 @@ export default function ClientsPage() {
         </div>
 
         {menuOpen && (
-          <CardContent className="mb-6">
+          <CardContent className="mb-6 flex flex-col gap-3">
             <input
               type="text"
               placeholder="Digite o nome da escola"
@@ -150,6 +197,19 @@ export default function ClientsPage() {
               onChange={(e) => setSchoolFilter(e.target.value)}
               className="p-3 border border-gray-600 rounded-lg bg-gray-900 text-gray-100 w-full"
             />
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setPage(0);
+              }}
+              className="p-3 border border-gray-600 rounded-lg bg-gray-900 text-gray-100 w-40"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </CardContent>
         )}
 

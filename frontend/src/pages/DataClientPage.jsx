@@ -1,11 +1,24 @@
 import React, { useEffect, useState, useCallback } from "react";
-import api from "../services/api";
 import { Card, CardContent } from "../components/ui/Card";
 import Pagination from "../components/Pagination";
 import { ArrowUpDown, Printer, Download, MoreVertical } from "lucide-react";
+import api from "../services/api";
+
+const VALID_SORT_FIELDS = [
+  "dataId",
+  "clientId",
+  "monthDate",
+  "revenue",
+  "expenses",
+  "orderCount",
+  "registeredStudents",
+  "notes",
+];
 
 export default function DataClientPage() {
+  const [allData, setAllData] = useState([]);
   const [data, setData] = useState([]);
+
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -17,9 +30,14 @@ export default function DataClientPage() {
   const [dateEndFilter, setDateEndFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+
+  // ================================
+  // FETCH DO BACKEND (SEM PAGINAÇÃO)
+  // ================================
   const fetchData = useCallback(async () => {
     try {
-      const params = { page, size: 5, sortBy, direction };
+      const params = {};
       if (clientFilter) params.clientId = clientFilter;
       if (dateStartFilter) params.dateStart = dateStartFilter;
       if (dateEndFilter) params.dateEnd = dateEndFilter;
@@ -27,16 +45,16 @@ export default function DataClientPage() {
       const res = await api.get("/client-data/filter", { params });
       const content = Array.isArray(res.data?.content) ? res.data.content : res.data || [];
       const fixed = content.map((d) => ({ ...d, registeredStudents: d.registeredStudents ?? 0 }));
-
-      setData(fixed);
-      setTotalPages(res.data?.totalPages ?? 1);
+      setAllData(fixed);
     } catch (err) {
-      console.error("Erro ao buscar:", err);
-      setData([]);
-      setTotalPages(1);
+      console.error(err);
+      setAllData([]);
     }
-  }, [page, sortBy, direction, clientFilter, dateStartFilter, dateEndFilter]);
+  }, [clientFilter, dateStartFilter, dateEndFilter]);
 
+  // ================================
+  // DEBOUNCE PARA FILTROS
+  // ================================
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(0);
@@ -45,11 +63,33 @@ export default function DataClientPage() {
     return () => clearTimeout(t);
   }, [clientFilter, dateStartFilter, dateEndFilter, fetchData]);
 
+  // ================================
+  // PAGINAÇÃO E ORDENAÇÃO LOCAL
+  // ================================
   useEffect(() => {
-    fetchData();
-  }, [page, sortBy, direction, fetchData]);
+    if (!allData.length) {
+      setData([]);
+      setTotalPages(1);
+      return;
+    }
+
+    const sorted = [...allData].sort((a, b) => {
+      const aVal = a[sortBy] ?? "";
+      const bVal = b[sortBy] ?? "";
+      if (aVal < bVal) return direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return direction === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    const start = page * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    setTotalPages(Math.ceil(sorted.length / rowsPerPage));
+    setData(sorted.slice(start, end));
+  }, [allData, sortBy, direction, page, rowsPerPage]);
 
   const toggleSort = (field) => {
+    if (!VALID_SORT_FIELDS.includes(field)) return;
     if (sortBy === field) setDirection(direction === "asc" ? "desc" : "asc");
     else {
       setSortBy(field);
@@ -71,10 +111,10 @@ export default function DataClientPage() {
     </th>
   );
 
-  const handleDownload = () => {
-    if (!data.length) return;
+  const downloadCSV = () => {
+    if (!allData.length) return;
     const headers = ["ID Registro", "ID Cliente", "Mês", "Receita", "Despesas", "Pedidos", "Alunos Registrados", "Notas"];
-    const rows = data.map((d) => [
+    const rows = allData.map((d) => [
       d.dataId,
       d.clientId,
       new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
@@ -82,7 +122,7 @@ export default function DataClientPage() {
       d.expenses,
       d.orderCount,
       d.registeredStudents,
-      d.notes,
+      d.notes || "",
     ]);
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map((e) => e.join(",")).join("\n");
     const link = document.createElement("a");
@@ -93,6 +133,7 @@ export default function DataClientPage() {
 
   const handlePrint = () => {
     if (!data.length) return;
+
     const tableHtml = `
       <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
         <thead>
@@ -141,34 +182,22 @@ export default function DataClientPage() {
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
         <div className="absolute top-4 right-4 flex gap-2 z-50">
-          <Download size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handleDownload} />
+          <Download size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
           <Printer size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
           <MoreVertical size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
 
         {menuOpen && (
-          <CardContent className="mb-4">
-            <input
-              placeholder="ID Cliente"
-              type="number"
-              value={clientFilter}
-              onChange={(e) => setClientFilter(e.target.value)}
-              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 mb-2 w-full no-spin"
-            />
-            <input
-              placeholder="Data Inicial"
-              type="date"
-              value={dateStartFilter}
-              onChange={(e) => setDateStartFilter(e.target.value)}
-              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 mb-2 w-full"
-            />
-            <input
-              placeholder="Data Final"
-              type="date"
-              value={dateEndFilter}
-              onChange={(e) => setDateEndFilter(e.target.value)}
-              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-full"
-            />
+          <CardContent className="mb-4 flex flex-col gap-2">
+            <input placeholder="ID Cliente" type="number" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 no-spin" />
+            <input placeholder="Data Inicial" type="date" value={dateStartFilter} onChange={(e) => setDateStartFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
+            <input placeholder="Data Final" type="date" value={dateEndFilter} onChange={(e) => setDateEndFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
+            <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 w-40">
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
           </CardContent>
         )}
 
@@ -188,20 +217,18 @@ export default function DataClientPage() {
                 </tr>
               </thead>
               <tbody className="bg-gray-800 divide-y divide-gray-700">
-                {data.length ? (
-                  data.map((d) => (
-                    <tr key={d.dataId} className="hover:bg-gray-700">
-                      <td className="p-2">{d.dataId}</td>
-                      <td className="p-2">{d.clientId}</td>
-                      <td className="p-2">{new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</td>
-                      <td className="p-2">{d.revenue}</td>
-                      <td className="p-2">{d.expenses}</td>
-                      <td className="p-2">{d.orderCount}</td>
-                      <td className="p-2">{d.registeredStudents}</td>
-                      <td className="p-2">{d.notes}</td>
-                    </tr>
-                  ))
-                ) : (
+                {data.length ? data.map((d) => (
+                  <tr key={d.dataId} className="hover:bg-gray-700">
+                    <td className="p-2">{d.dataId}</td>
+                    <td className="p-2">{d.clientId}</td>
+                    <td className="p-2">{new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</td>
+                    <td className="p-2">{d.revenue}</td>
+                    <td className="p-2">{d.expenses}</td>
+                    <td className="p-2">{d.orderCount}</td>
+                    <td className="p-2">{d.registeredStudents}</td>
+                    <td className="p-2">{d.notes}</td>
+                  </tr>
+                )) : (
                   <tr>
                     <td colSpan="8" className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
                   </tr>
