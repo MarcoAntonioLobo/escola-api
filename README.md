@@ -8,11 +8,47 @@ A aplicação conta com um **backend robusto em Java/Spring Boot**, **frontend m
 
 ## 🛠 Tecnologias Utilizadas
 
-- **Backend:** Java, Spring Boot, JPA, Lombok, Maven
-- **Frontend:** React, Tailwind CSS, Lucide Icons
-- **Banco de Dados:** MySQL
-- **Ferramentas:** Docker, Docker Compose
-- **Controle de versão:** Git
+# 🔹 Backend
+
+🚀 Java 17
+
+🧩 Spring Boot
+
+🌐 Spring Web
+
+🗄️ Spring Data JPA
+
+✔️ Spring Validation
+
+📘 Springdoc OpenAPI — Swagger UI (documentação automática da API)
+
+🔧 Lombok
+
+📦 Maven
+
+# 🎨 Frontend
+
+⚛️ React
+
+⚡ Vite
+
+🎨 Tailwind CSS
+
+🔔 Lucide Icons
+
+# 🗃️ Banco de Dados
+
+🐬 MySQL
+
+# 🐳 Infra & DevOps
+
+🐳 Docker
+
+🧰 Docker Compose
+
+# 🔧 Controle de Versão
+
+🌍 Git & GitHub
 
 ## 🚀 Funcionalidades
 
@@ -89,6 +125,31 @@ O frontend será iniciado em: http://localhost:3000
 ```
 
 ⚠️ Observação: Ao rodar localmente, certifique-se de que o MySQL está ativo e as credenciais estão corretas no backend.
+
+# 📘 API Documentation – Swagger
+
+A API oferece documentação completa gerada automaticamente com Swagger / OpenAPI, permitindo visualizar, testar e explorar todos os endpoints do backend diretamente pelo navegador.
+
+🔗 Swagger UI
+
+Use esta interface para testar requisições rapidamente:
+
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+Caso sua versão do Springdoc utilize o caminho legado, utilize:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+🔗 OpenAPI JSON
+
+Endpoint com o esquema completo da API:
+```
+http://localhost:8080/v3/api-docs
+```
 
 ## 🧪 Testes
 

@@ -65,20 +65,13 @@ INSERT INTO client (external_id, school_name, cafeteria_name, location, student_
 ('EXT427','Cantina Central Kids Colégio Ideal','CANTINA VLUPT','Curitiba PR',310),
 ('EXT428','Cantina BigCoffee Escola Alpha Kids','CANTINA VLUPT','Curitiba PR',400),
 ('EXT429','Cantina Estação Sabor Colégio Mater Dei','CANTINA VLUPT','Curitiba PR',900),
-('EXT430','Cantina Chef Kids Escola Progresso Júnior','CANTINA VLUPT','Curitiba PR',780),
-('EXT431','Cantina Alegria Escola Horizonte Kids','CANTINA VLUPT','Curitiba PR',330),
-('EXT432','Cantina Doce Sabor Colégio Majestade','CANTINA VLUPT','Curitiba PR',510),
-('EXT433','Cantina Sabor Real Escola UniKids','CANTINA VLUPT','Curitiba PR',440),
-('EXT434','Cantina Kids & Café Escola Master','CANTINA VLUPT','Curitiba PR',810),
-('EXT435','Cantina Mundo Verde Escola Alfa Júnior','CANTINA VLUPT','Curitiba PR',290),
-('EXT436','Cantina MaxKids Colégio Vitória Infantil','CANTINA VLUPT','Curitiba PR',500);
-
--- ===============================
--- DADOS DE CLIENTES
--- ===============================
-
--- (TODOS OS SEUS DADOS DE client_data CONTINUAM AQUI, ESTÃO CORRETOS)
-
+('EXT430','Cantina Chef Kids Escola Progresso Júnior','CANTINA EXTRA','Belo Horizonte MG',780),
+('EXT431','Cantina Alegria Escola Horizonte Kids','CANTINA EXTRA','Belo Horizonte MG',330),
+('EXT432','Cantina Doce Sabor Colégio Majestade','CANTINA EXTRA','Belo Horizonte MG',510),
+('EXT433','Cantina Sabor Real Escola UniKids','CANTINA Franchising','São Paulo SP',440),
+('EXT434','Cantina Kids & Café Escola Master','CANTINA Franchising','São Paulo SP',810),
+('EXT435','Cantina Mundo Verde Escola Alfa Júnior','CANTINA Franchising','São Paulo SP',290),
+('EXT436','Cantina MaxKids Colégio Vitória Infantil','CANTINA Franchising','São Paulo SP',500);
 
 -- ===============================
 -- DADOS DE CLIENTES

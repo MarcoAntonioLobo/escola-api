@@ -189,7 +189,7 @@ export default function DataClientPage() {
         </div>
 
         {menuOpen && (
-          <CardContent className="mb-6 flex flex-col gap-2">
+			<CardContent className="mb-6 flex flex-col gap-6 px-6 py-4 space-y-4 bg-gray-900 rounded-lg border border-gray-700">
             <input placeholder="ID Cliente" type="number" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 no-spin" />
             <input placeholder="Data Inicial" type="date" value={dateStartFilter} onChange={(e) => setDateStartFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
             <input placeholder="Data Final" type="date" value={dateEndFilter} onChange={(e) => setDateEndFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
@@ -236,12 +236,12 @@ export default function DataClientPage() {
         {/* PAGINAÇÃO + LINHAS POR PÁGINA */}
         <div className="flex justify-between items-center mt-4 mb-8 w-full">
           <div>
-            <span>Linhas por página: </span>
+            <span>Exibir: </span>
             <select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100">
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
+              <option value={10}>10 Linhas</option>
+              <option value={25}>25 Linhas</option>
+              <option value={50}>50 Linhas</option>
+              <option value={100}>100 Linhas</option>
             </select>
           </div>
           <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
