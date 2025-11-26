@@ -183,17 +183,36 @@ export default function DataClientPage() {
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
         <div className="absolute top-4 right-4 flex gap-2 z-50">
-          <Download size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
-          <Printer size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
-          <MoreVertical size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
+          <Download size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
+          <Printer size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
+          <MoreVertical size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
 
         {menuOpen && (
 			<CardContent className="mb-6 flex flex-col gap-6 px-6 py-4 space-y-4 bg-gray-900 rounded-lg border border-gray-700">
-            <input placeholder="ID Cliente" type="number" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100 no-spin" />
-            <input placeholder="Data Inicial" type="date" value={dateStartFilter} onChange={(e) => setDateStartFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
-            <input placeholder="Data Final" type="date" value={dateEndFilter} onChange={(e) => setDateEndFilter(e.target.value)} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100" />
-          </CardContent>
+			  <input
+			    placeholder="ID Cliente"
+			    type="number"
+			    value={clientFilter}
+			    onChange={(e) => setClientFilter(e.target.value)}
+			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-300 no-spin placeholder-gray-500"
+			  />
+			  <input
+			    placeholder="Data Inicial"
+			    type="date"
+			    value={dateStartFilter}
+			    onChange={(e) => setDateStartFilter(e.target.value)}
+			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400"
+			  />
+			  <input
+			    placeholder="Data Final"
+			    type="date"
+			    value={dateEndFilter}
+			    onChange={(e) => setDateEndFilter(e.target.value)}
+			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400"
+			  />
+			</CardContent>
+
         )}
 
         <CardContent className="mb-6">

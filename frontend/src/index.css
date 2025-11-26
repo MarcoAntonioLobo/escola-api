@@ -89,38 +89,31 @@ tbody tr:hover {
 	background-color: #334155;
 }
 
-
 /* =========================
    INPUTS & SELECTS
 ========================= */
-
 input, select {
   padding: 0.75rem 1rem;
   border-radius: 0.8rem;
   border: 1px solid #475569;
   background-color: #0f172a;
-  color: #f3f4f6;
+  color: #d1d5db; /* texto padrão dos inputs */
   font-size: 0.95rem;
   transition: 0.2s;
   margin: 0.4rem;
+  caret-color: #f3f4f6;
 }
 
-/* Efeito ao focar no input/select */
+input::placeholder,
+select::placeholder {
+  color: #9ca3af;
+}
+
 input:focus,
 select:focus {
 	border-color: #3b82f6;
-	/* destaque azul */
 	box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
-	/* sombra sutil */
 	outline: none;
-	/* remove outline padrão */
-}
-
-input:focus,
-select:focus {
-	outline: none;
-	border-color: #93c5fd;
-	box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.4);
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -137,11 +130,18 @@ input[type=number] {
 	appearance: none;
 }
 
+/* =========================
+   INPUT DATE MAIS ESCURO
+========================= */
 input[type=date] {
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	appearance: none;
-	color: #f3f4f6;
+	color: #a1a1aa; /* fonte mais escura */
+}
+
+input[type=date]::-webkit-datetime-edit {
+	color: #a1a1aa; /* força cor no Chrome/Safari */
 }
 
 /* =========================
@@ -178,7 +178,7 @@ button:disabled {
 	justify-content: center;
 	align-items: center;
 	gap: 0.6rem;
-	margin-top: 1,5rem;
+	margin-top: 1.5rem;
 }
 
 .pagination-btn {
@@ -236,7 +236,7 @@ button:disabled {
 ========================= */
 .action-buttons {
 	display: flex;
-	gap: 0.5rem;
+	gap: 1rem;
 	position: absolute;
 	top: 1rem;
 	left: 1rem;
@@ -244,7 +244,7 @@ button:disabled {
 }
 
 .action-buttons svg {
-	padding: 0.5rem;
+	padding: 1.2rem;
 	border-radius: 0.6rem;
 	background-color: #1e293b;
 	border: 1px solid #334155;
@@ -268,7 +268,7 @@ button:disabled {
 	top: 1rem;
 	right: 2rem;
 	z-index: 50;
-	padding: 2rem;
+	padding: 0.6rem;
 	border-radius: 0.6rem;
 	background-color: #1e293b;
 	border: 1px solid #334155;

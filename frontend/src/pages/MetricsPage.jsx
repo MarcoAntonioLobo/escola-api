@@ -198,9 +198,9 @@ export default function MetricsPage() {
       <Card className="relative w-full max-w-6xl">
         {/* BOTÕES DE CSV, PRINT E MENU */}
         <div className="absolute top-4 right-4 flex gap-2 z-50">
-          <Download size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
-          <Printer size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
-          <MoreVertical size={20} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
+          <Download size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
+          <Printer size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
+          <MoreVertical size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
 
         {/* FILTROS */}
