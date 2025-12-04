@@ -72,9 +72,7 @@ class DataClientServiceImplTest {
     @Test
     void testFindAll() {
         when(repository.findAll()).thenReturn(Arrays.asList(dataClient));
-
         List<DataClient> result = service.findAll();
-
         assertEquals(1, result.size());
         assertEquals(dataClient, result.get(0));
     }
@@ -85,9 +83,7 @@ class DataClientServiceImplTest {
     @Test
     void testFindById_Found() {
         when(repository.findById(1)).thenReturn(Optional.of(dataClient));
-
         Optional<DataClient> result = service.findById(1);
-
         assertTrue(result.isPresent());
         assertEquals(dataClient, result.get());
     }
@@ -95,9 +91,7 @@ class DataClientServiceImplTest {
     @Test
     void testFindById_NotFound() {
         when(repository.findById(2)).thenReturn(Optional.empty());
-
         Optional<DataClient> result = service.findById(2);
-
         assertFalse(result.isPresent());
     }
 
@@ -112,14 +106,12 @@ class DataClientServiceImplTest {
         when(repository.save(dataClient)).thenReturn(dataClient);
 
         DataClient result = service.save(dataClient);
-
         assertEquals(dataClient, result);
     }
 
     @Test
     void testSave_ClientNull() {
         DataClient invalid = DataClient.builder().dataId(2).client(null).build();
-
         BadRequestException ex = assertThrows(BadRequestException.class, () -> service.save(invalid));
         assertTrue(ex.getMessage().contains("Cliente não pode ser nulo"));
     }
@@ -127,7 +119,6 @@ class DataClientServiceImplTest {
     @Test
     void testSave_ClientNotFound() {
         when(clientRepository.existsById(client.getClientId())).thenReturn(false);
-
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.save(dataClient));
         assertTrue(ex.getMessage().contains("Cliente não encontrado"));
     }
@@ -137,7 +128,6 @@ class DataClientServiceImplTest {
         when(clientRepository.existsById(client.getClientId())).thenReturn(true);
         when(repository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
                 .thenReturn(Optional.of(dataClient));
-
         ConflictException ex = assertThrows(ConflictException.class, () -> service.save(dataClient));
         assertTrue(ex.getMessage().contains("Já existe registro para este cliente neste mês"));
     }
@@ -164,7 +154,6 @@ class DataClientServiceImplTest {
         when(repository.save(any(DataClient.class))).thenReturn(updated);
 
         DataClient result = service.update(1, updated);
-
         assertEquals(BigDecimal.valueOf(2000), result.getRevenue());
         assertEquals("Atualizado", result.getNotes());
         assertEquals(100, result.getOrderCount());
@@ -174,7 +163,6 @@ class DataClientServiceImplTest {
     @Test
     void testUpdate_NotFound() {
         when(repository.findById(2)).thenReturn(Optional.empty());
-
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
                 () -> service.update(2, dataClient));
         assertTrue(ex.getMessage().contains("Registro não encontrado"));
@@ -211,14 +199,12 @@ class DataClientServiceImplTest {
     void testDelete_Success() {
         when(repository.existsById(1)).thenReturn(true);
         doNothing().when(repository).deleteById(1);
-
         assertDoesNotThrow(() -> service.delete(1));
     }
 
     @Test
     void testDelete_NotFound() {
         when(repository.existsById(2)).thenReturn(false);
-
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> service.delete(2));
         assertTrue(ex.getMessage().contains("Registro não encontrado"));
     }
@@ -229,9 +215,7 @@ class DataClientServiceImplTest {
     @Test
     void testFindByClientId() {
         when(repository.findByClient_ClientId(1)).thenReturn(Arrays.asList(dataClient));
-
         List<DataClient> result = service.findByClientId(1);
-
         assertEquals(1, result.size());
         assertEquals(dataClient, result.get(0));
     }

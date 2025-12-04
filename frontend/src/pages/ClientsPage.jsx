@@ -110,7 +110,7 @@ export default function ClientsPage() {
   const downloadCSV = () => {
     if (!allClients.length) return;
 
-    const headers = ["Escola", "Cafeteria", "Localização", "Alunos"];
+    const headers = ["Escola", "Cantina", "Localização", "Alunos"];
     const rows = allClients.map((c) => [
       `"${(c.schoolName || "").replace(/"/g, '""')}"`,
       `"${(c.cafeteriaName || "").replace(/"/g, '""')}"`,
@@ -202,7 +202,7 @@ export default function ClientsPage() {
 		      className="!p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
 		    />
 		    <input
-		      placeholder="Filtrar por Cafeteria"
+		      placeholder="Filtrar por Cantina"
 		      value={cafeteriaFilter}
 		      onChange={(e) => setCafeteriaFilter(e.target.value)}
 		      className="!p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
@@ -223,7 +223,7 @@ export default function ClientsPage() {
             <thead className="bg-gray-700 text-gray-100">
               <tr>
                 <SortHeader field="schoolName" label="Escola" />
-                <SortHeader field="cafeteriaName" label="Cafeteria" />
+                <SortHeader field="cafeteriaName" label="Cantina" />
                 <SortHeader field="location" label="Localização" />
                 <SortHeader field="studentCount" label="Alunos" />
               </tr>

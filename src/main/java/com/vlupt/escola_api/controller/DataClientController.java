@@ -1,16 +1,8 @@
 package com.vlupt.escola_api.controller;
 
 import java.util.List;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.vlupt.escola_api.dto.DataClientFilterDTO;
 import com.vlupt.escola_api.dto.DataClientRequestDTO;
@@ -41,18 +33,12 @@ public class DataClientController {
 
     @GetMapping
     public List<DataClientResponseDTO> findAll() {
-        return service.findAll()
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        return service.findAll().stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/filter")
     public List<DataClientResponseDTO> filter(DataClientFilterDTO filter) {
-        return service.filter(filter)
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        return service.filter(filter).stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/{id}")
@@ -66,20 +52,15 @@ public class DataClientController {
     public ResponseEntity<DataClientResponseDTO> create(@Valid @RequestBody DataClientRequestDTO dto) {
         var client = clientService.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
-
         DataClient saved = service.save(mapper.toEntity(dto, client));
-
         return ResponseEntity.status(201).body(mapper.toResponse(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DataClientResponseDTO> update(
-            @PathVariable Integer id,
-            @Valid @RequestBody DataClientRequestDTO dto) {
-
+    public ResponseEntity<DataClientResponseDTO> update(@PathVariable Integer id,
+                                                        @Valid @RequestBody DataClientRequestDTO dto) {
         var client = clientService.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
-
         DataClient updated = service.update(id, mapper.toEntity(dto, client));
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
@@ -92,9 +73,6 @@ public class DataClientController {
 
     @GetMapping("/client/{clientId}")
     public List<DataClientResponseDTO> findByClient(@PathVariable Integer clientId) {
-        return service.findByClientId(clientId)
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        return service.findByClientId(clientId).stream().map(mapper::toResponse).toList();
     }
 }

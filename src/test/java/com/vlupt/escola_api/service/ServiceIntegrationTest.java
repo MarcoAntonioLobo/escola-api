@@ -92,11 +92,8 @@ class ServiceIntegrationTestWithMocks {
 
         when(dataClientRepository.findByClient_ClientIdAndMonthDate(client.getClientId(), dataClient.getMonthDate()))
                 .thenReturn(Optional.of(dataClient));
-
-        ConflictException exception = assertThrows(ConflictException.class, () -> {
-            dataClientService.save(dataClient);
-        });
-        assertTrue(exception.getMessage().contains("Já existe registro de dados para esse cliente"));
+        ConflictException exception = assertThrows(ConflictException.class, () -> dataClientService.save(dataClient));
+        assertTrue(exception.getMessage().contains("Já existe registro para este cliente neste mês"));
 
         DataClient updatedData = DataClient.builder()
                 .client(client)

@@ -2,7 +2,6 @@ package com.vlupt.escola_api.service;
 
 import java.util.List;
 import java.util.Optional;
-
 import com.vlupt.escola_api.dto.DataClientFilterDTO;
 import com.vlupt.escola_api.model.DataClient;
 

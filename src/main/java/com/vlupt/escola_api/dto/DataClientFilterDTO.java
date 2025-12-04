@@ -1,14 +1,17 @@
 package com.vlupt.escola_api.dto;
 
 import java.time.LocalDate;
-import lombok.Data;
+import lombok.*;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class DataClientFilterDTO {
 
-    private Integer clientId;
-    private LocalDate dateStart;
-    private LocalDate dateEnd;
-    private String sortBy;
-    private String direction;
+    private Integer clientId; // Filtra por cliente
+    private LocalDate dateStart; // Data inicial
+    private LocalDate dateEnd;   // Data final
+    private String sortBy;       // Campo de ordenação (ex: "monthDate", "revenue", "expenses")
+    private String direction;    // "asc" ou "desc"
 }

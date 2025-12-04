@@ -3,20 +3,8 @@ package com.vlupt.escola_api.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(
@@ -42,18 +30,40 @@ public class DataClient {
     @Column(name = "month_date", nullable = false)
     private LocalDate monthDate;
 
-    @Builder.Default
-    private BigDecimal revenue = BigDecimal.ZERO;
+    // Colunas da Cantina
+    @Column(name = "cantina_percent", precision = 5, scale = 2)
+    private BigDecimal cantinaPercent; // Cantina = Vpt x Escola %
 
-    @Builder.Default
-    private BigDecimal expenses = BigDecimal.ZERO;
-
-    @Builder.Default
-    private Integer orderCount = 0;
-
-    @Builder.Default
     @Column(name = "registered_students", nullable = false)
-    private Integer registeredStudents = 0;
+    private Integer registeredStudents; // L. Aluno Cad
+
+    @Column(name = "average_cantina_per_student", precision = 10, scale = 2)
+    private BigDecimal averageCantinaPerStudent; // T. Méd Cant.
+
+    @Column(name = "average_pedagogical_per_student", precision = 10, scale = 2)
+    private BigDecimal averagePedagogicalPerStudent; // Med. Ped. aluno
+
+    @Column(name = "order_count")
+    private Integer orderCount; // Qtde Pedido M
+
+    @Column(name = "revenue", precision = 15, scale = 2)
+    private BigDecimal revenue; // Faturamento
+
+    @Column(name = "expenses", precision = 15, scale = 2)
+    private BigDecimal expenses; // Despesas
+
+    // Colunas da Vlupt
+    @Column(name = "profitability", precision = 10, scale = 2)
+    private BigDecimal profitability; // Rentabilidade
+
+    @Column(name = "revenue_loss", precision = 10, scale = 2)
+    private BigDecimal revenueLoss; // Evasão de $$$
+
+    @Column(name = "orders_outside_vpt")
+    private Integer ordersOutsideVpt; // Ped. Fora Vpt
+
+    @Column(name = "average_ticket_app", precision = 10, scale = 2)
+    private BigDecimal averageTicketApp; // Ticket M. App.
 
     @Column(columnDefinition = "TEXT")
     private String notes;

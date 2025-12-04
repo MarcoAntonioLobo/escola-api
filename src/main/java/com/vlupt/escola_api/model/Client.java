@@ -1,20 +1,9 @@
 package com.vlupt.escola_api.model;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "client")
@@ -28,22 +17,21 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer clientId;
 
+    @Column(name = "external_id", length = 255)
     private String externalId;
 
-    @Column(nullable = false)
+    @Column(name = "school_name", nullable = false, length = 255)
     private String schoolName;
 
+    @Column(name = "cafeteria_name", length = 255)
     private String cafeteriaName;
 
+    @Column(name = "location", length = 255)
     private String location;
 
+    @Column(name = "student_count")
     private Integer studentCount;
 
-    @OneToMany(
-        mappedBy = "client",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
-    @Builder.Default
-    private List<DataClient> data = new ArrayList<>();
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DataClient> dataClients;
 }

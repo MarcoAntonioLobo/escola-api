@@ -4,17 +4,6 @@ import Pagination from "../components/Pagination";
 import { ArrowUpDown, Printer, Download, MoreVertical } from "lucide-react";
 import api from "../services/api";
 
-const VALID_SORT_FIELDS = [
-  "dataId",
-  "clientId",
-  "monthDate",
-  "revenue",
-  "expenses",
-  "orderCount",
-  "registeredStudents",
-  "notes",
-];
-
 export default function DataClientPage() {
   const [allData, setAllData] = useState([]);
   const [data, setData] = useState([]);
@@ -31,9 +20,21 @@ export default function DataClientPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
-  // ================================
-  // FETCH DO BACKEND (SEM PAGINAÇÃO)
-  // ================================
+  const VALID_SORT_FIELDS = [
+    "dataId",
+    "clientId",
+    "monthDate",
+    "revenue",
+    "expenses",
+    "orderCount",
+    "registeredStudents",
+    "notes",
+    // Cantina
+    "studentCount", "avgCafeteria", "avgPerStudent", "monthlyOrders", "billing",
+    // Vlupt
+    "profitability", "evasion", "outsideOrders", "appTicket"
+  ];
+
   const fetchData = useCallback(async () => {
     try {
       const params = {};
@@ -43,17 +44,26 @@ export default function DataClientPage() {
 
       const res = await api.get("/client-data/filter", { params });
       const content = Array.isArray(res.data?.content) ? res.data.content : res.data || [];
-      const fixed = content.map((d) => ({ ...d, registeredStudents: d.registeredStudents ?? 0 }));
-      setAllData(fixed);
+      setAllData(content.map(d => ({
+        ...d,
+        registeredStudents: d.registeredStudents ?? 0,
+        studentCount: d.studentCount ?? 0,
+        avgCafeteria: d.avgCafeteria ?? 0,
+        avgPerStudent: d.avgPerStudent ?? 0,
+        monthlyOrders: d.orderCount ?? 0,
+        billing: d.revenue ?? 0,
+        expenses: d.expenses ?? 0,
+        profitability: d.profitability ?? 0,
+        evasion: d.evasion ?? 0,
+        outsideOrders: d.outsideOrders ?? 0,
+        appTicket: d.appTicket ?? 0
+      })));
     } catch (err) {
       console.error(err);
       setAllData([]);
     }
   }, [clientFilter, dateStartFilter, dateEndFilter]);
 
-  // ================================
-  // DEBOUNCE PARA FILTROS
-  // ================================
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(0);
@@ -62,16 +72,12 @@ export default function DataClientPage() {
     return () => clearTimeout(t);
   }, [clientFilter, dateStartFilter, dateEndFilter, fetchData]);
 
-  // ================================
-  // PAGINAÇÃO E ORDENAÇÃO LOCAL
-  // ================================
   useEffect(() => {
     if (!allData.length) {
       setData([]);
       setTotalPages(1);
       return;
     }
-
     const sorted = [...allData].sort((a, b) => {
       const aVal = a[sortBy] ?? "";
       const bVal = b[sortBy] ?? "";
@@ -114,145 +120,74 @@ export default function DataClientPage() {
     </th>
   );
 
-  const downloadCSV = () => {
-    if (!allData.length) return;
-    const headers = ["ID Registro", "ID Cliente", "Mês", "Receita", "Despesas", "Pedidos", "Alunos Registrados", "Notas"];
-    const rows = allData.map((d) => [
-      d.dataId,
-      d.clientId,
-      new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" }),
-      d.revenue,
-      d.expenses,
-      d.orderCount,
-      d.registeredStudents,
-      d.notes || "",
-    ]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map((e) => e.join(",")).join("\n");
-    const link = document.createElement("a");
-    link.href = encodeURI(csvContent);
-    link.download = "client-data.csv";
-    link.click();
-  };
-
-  const handlePrint = () => {
-    if (!data.length) return;
-
-    const tableHtml = `
-      <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
-        <thead>
-          <tr style="background-color: #444; color: #fff;">
-            <th>ID Registro</th>
-            <th>ID Cliente</th>
-            <th>Mês</th>
-            <th>Receita</th>
-            <th>Despesas</th>
-            <th>Pedidos</th>
-            <th>Alunos Registrados</th>
-            <th>Notas</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map(
-            (d) => `
-            <tr>
-              <td>${d.dataId}</td>
-              <td>${d.clientId}</td>
-              <td>${new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</td>
-              <td>${d.revenue}</td>
-              <td>${d.expenses}</td>
-              <td>${d.orderCount}</td>
-              <td>${d.registeredStudents}</td>
-              <td>${d.notes || ""}</td>
-            </tr>`
-          ).join("")}
-        </tbody>
-      </table>
-    `;
-    const WinPrint = window.open("", "", "width=900,height=650");
-    WinPrint.document.write("<html><head><title>Dados dos Clientes</title></head><body>");
-    WinPrint.document.write("<h2 style='text-align:center;'>Dados dos Clientes</h2>");
-    WinPrint.document.write(tableHtml);
-    WinPrint.document.write("</body></html>");
-    WinPrint.document.close();
-    WinPrint.focus();
-    WinPrint.print();
-    WinPrint.close();
-  };
-
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
+        {/* Menu, Download e Print */}
         <div className="absolute top-4 right-4 flex gap-2 z-50">
-          <Download size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={downloadCSV} />
-          <Printer size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={handlePrint} />
+          <Download size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" />
+          <Printer size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" />
           <MoreVertical size={23} className="text-gray-100 cursor-pointer hover:text-green-400 transition" onClick={() => setMenuOpen(!menuOpen)} />
         </div>
 
         {menuOpen && (
-			<CardContent className="mb-6 flex flex-col gap-6 px-6 py-4 space-y-4 bg-gray-900 rounded-lg border border-gray-700">
-			  <input
-			    placeholder="ID Cliente"
-			    type="number"
-			    value={clientFilter}
-			    onChange={(e) => setClientFilter(e.target.value)}
-			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-300 no-spin placeholder-gray-500"
-			  />
-			  <input
-			    placeholder="Data Inicial"
-			    type="date"
-			    value={dateStartFilter}
-			    onChange={(e) => setDateStartFilter(e.target.value)}
-			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400"
-			  />
-			  <input
-			    placeholder="Data Final"
-			    type="date"
-			    value={dateEndFilter}
-			    onChange={(e) => setDateEndFilter(e.target.value)}
-			    className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400"
-			  />
-			</CardContent>
-
+          <CardContent className="mb-6 flex flex-col gap-6 px-6 py-4 space-y-4 bg-gray-900 rounded-lg border border-gray-700">
+            <input placeholder="ID Cliente" type="number" value={clientFilter} onChange={(e) => setClientFilter(e.target.value)}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-300 placeholder-gray-500" />
+            <input placeholder="Data Inicial" type="date" value={dateStartFilter} onChange={(e) => setDateStartFilter(e.target.value)}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400" />
+            <input placeholder="Data Final" type="date" value={dateEndFilter} onChange={(e) => setDateEndFilter(e.target.value)}
+              className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-400 placeholder-gray-400" />
+          </CardContent>
         )}
 
-        <CardContent className="mb-6">
-          <div className="overflow-x-auto">
-            <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
-              <thead className="bg-gray-700 text-gray-100">
-                <tr>
-                  <SortHeader field="dataId" label="ID Registro" />
-                  <SortHeader field="clientId" label="ID Cliente" />
-                  <SortHeader field="monthDate" label="Mês" />
-                  <SortHeader field="revenue" label="Receita" />
-                  <SortHeader field="expenses" label="Despesas" />
-                  <SortHeader field="orderCount" label="Pedidos" />
-                  <SortHeader field="registeredStudents" label="Alunos Registrados" />
-                  <SortHeader field="notes" label="Notas" />
+        {/* Tabela única dividida em Cantina e Vlupt */}
+        <CardContent className="mb-6 px-6 py-4 overflow-x-auto">
+          <table className="min-w-full border border-gray-700 divide-y divide-gray-700">
+            <thead className="bg-gray-700 text-gray-100">
+              <tr>
+                <th colSpan={5} className="text-center p-2 border-b border-gray-600">Cantina</th>
+                <th colSpan={5} className="text-center p-2 border-b border-gray-600">Vlupt</th>
+              </tr>
+              <tr>
+                <SortHeader field="studentCount" label="L. Aluno Cad" />
+                <SortHeader field="avgCafeteria" label="T. Méd Cant." />
+                <SortHeader field="avgPerStudent" label="Med. Ped. aluno" />
+                <SortHeader field="monthlyOrders" label="Qtde Pedido M" />
+                <SortHeader field="billing" label="Faturamento" />
+                
+                <SortHeader field="profitability" label="Rentabilidade" />
+                <SortHeader field="evasion" label="Evasão de $$$" />
+                <SortHeader field="outsideOrders" label="Ped. Fora Vpt" />
+                <SortHeader field="appTicket" label="Ticket M. App." />
+                <SortHeader field="expenses" label="Despesas" />
+              </tr>
+            </thead>
+            <tbody className="bg-gray-800 divide-y divide-gray-700">
+              {data.length ? data.map(d => (
+                <tr key={d.dataId} className="hover:bg-gray-700">
+                  <td className="p-2">{d.studentCount}</td>
+                  <td className="p-2">{d.avgCafeteria}</td>
+                  <td className="p-2">{d.avgPerStudent}</td>
+                  <td className="p-2">{d.monthlyOrders}</td>
+                  <td className="p-2">{d.billing}</td>
+
+                  <td className="p-2">{d.profitability}</td>
+                  <td className="p-2">{d.evasion}</td>
+                  <td className="p-2">{d.outsideOrders}</td>
+                  <td className="p-2">{d.appTicket}</td>
+                  <td className="p-2">{d.expenses}</td>
                 </tr>
-              </thead>
-              <tbody className="bg-gray-800 divide-y divide-gray-700">
-                {data.length ? data.map((d) => (
-                  <tr key={d.dataId} className="hover:bg-gray-700">
-                    <td className="p-2">{d.dataId}</td>
-                    <td className="p-2">{d.clientId}</td>
-                    <td className="p-2">{new Date(d.monthDate).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}</td>
-                    <td className="p-2">{d.revenue}</td>
-                    <td className="p-2">{d.expenses}</td>
-                    <td className="p-2">{d.orderCount}</td>
-                    <td className="p-2">{d.registeredStudents}</td>
-                    <td className="p-2">{d.notes}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="8" className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              )) : (
+                <tr>
+                  <td colSpan="10" className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </CardContent>
 
-        {/* PAGINAÇÃO + LINHAS POR PÁGINA */}
+        {/* PAGINAÇÃO */}
         <div className="flex justify-between items-center mt-4 mb-8 w-full">
           <div>
             <span>Exibir: </span>

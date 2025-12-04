@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class FrontendController {
 
-    @GetMapping(value = {"/", "/clients", "/data", "/metrics"})
+    @GetMapping(value = {"/", "/clients", "/data"})
     public String index() {
         return "index.html";
     }

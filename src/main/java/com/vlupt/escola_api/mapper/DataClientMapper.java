@@ -11,33 +11,44 @@ import com.vlupt.escola_api.model.DataClient;
 public class DataClientMapper {
 
     public DataClient toEntity(DataClientRequestDTO dto, Client client) {
-        if (dto == null || client == null) {
-            return null;
-        }
+        if (dto == null || client == null) return null;
 
         return DataClient.builder()
                 .client(client)
                 .monthDate(dto.getMonthDate())
+                .cantinaPercent(dto.getCantinaPercent())
+                .registeredStudents(dto.getRegisteredStudents())
+                .averageCantinaPerStudent(dto.getAverageCantinaPerStudent())
+                .averagePedagogicalPerStudent(dto.getAveragePedagogicalPerStudent())
+                .orderCount(dto.getOrderCount())
                 .revenue(dto.getRevenue())
                 .expenses(dto.getExpenses())
-                .orderCount(dto.getOrderCount())
+                .profitability(dto.getProfitability())
+                .revenueLoss(dto.getRevenueLoss())
+                .ordersOutsideVpt(dto.getOrdersOutsideVpt())
+                .averageTicketApp(dto.getAverageTicketApp())
                 .notes(dto.getNotes())
                 .build();
     }
 
     public DataClientResponseDTO toResponse(DataClient entity) {
-        if (entity == null) {
-            return null;
-        }
+        if (entity == null) return null;
 
         return DataClientResponseDTO.builder()
                 .dataId(entity.getDataId())
                 .clientId(entity.getClient().getClientId())
                 .monthDate(entity.getMonthDate())
+                .cantinaPercent(entity.getCantinaPercent())
+                .registeredStudents(entity.getRegisteredStudents())
+                .averageCantinaPerStudent(entity.getAverageCantinaPerStudent())
+                .averagePedagogicalPerStudent(entity.getAveragePedagogicalPerStudent())
+                .orderCount(entity.getOrderCount())
                 .revenue(entity.getRevenue())
                 .expenses(entity.getExpenses())
-                .orderCount(entity.getOrderCount())
-                .registeredStudents(entity.getRegisteredStudents())
+                .profitability(entity.getProfitability())
+                .revenueLoss(entity.getRevenueLoss())
+                .ordersOutsideVpt(entity.getOrdersOutsideVpt())
+                .averageTicketApp(entity.getAverageTicketApp())
                 .notes(entity.getNotes())
                 .build();
     }

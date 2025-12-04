@@ -80,8 +80,6 @@ class DataClientControllerTest {
                 .client(client)
                 .monthDate(LocalDate.of(2025, 11, 1))
                 .revenue(BigDecimal.valueOf(1000))
-                .expenses(BigDecimal.valueOf(500))
-                .orderCount(10)
                 .registeredStudents(100)
                 .notes("Teste")
                 .build();
@@ -90,8 +88,6 @@ class DataClientControllerTest {
                 .clientId(client.getClientId())
                 .monthDate(dataClient.getMonthDate())
                 .revenue(dataClient.getRevenue())
-                .expenses(dataClient.getExpenses())
-                .orderCount(dataClient.getOrderCount())
                 .registeredStudents(dataClient.getRegisteredStudents())
                 .notes(dataClient.getNotes())
                 .build();
@@ -101,8 +97,6 @@ class DataClientControllerTest {
                 .clientId(client.getClientId())
                 .monthDate(dataClient.getMonthDate())
                 .revenue(dataClient.getRevenue())
-                .expenses(dataClient.getExpenses())
-                .orderCount(dataClient.getOrderCount())
                 .registeredStudents(dataClient.getRegisteredStudents())
                 .notes(dataClient.getNotes())
                 .build();
@@ -119,7 +113,6 @@ class DataClientControllerTest {
         mockMvc.perform(get("/api/client-data"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
@@ -134,7 +127,6 @@ class DataClientControllerTest {
         mockMvc.perform(get("/api/client-data/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
@@ -162,7 +154,6 @@ class DataClientControllerTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
@@ -192,7 +183,6 @@ class DataClientControllerTest {
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 
@@ -238,7 +228,6 @@ class DataClientControllerTest {
         mockMvc.perform(get("/api/client-data/client/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].orderCount").value(dataClient.getOrderCount()))
                 .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
     }
 

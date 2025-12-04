@@ -3,10 +3,8 @@ package com.vlupt.escola_api.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
@@ -14,11 +12,26 @@ import lombok.NoArgsConstructor;
 @Builder
 public class DataClientRequestDTO {
 
+    @NotNull
     private Integer clientId;
+
+    @NotNull
     private LocalDate monthDate;
+
+    // Cantina
+    private BigDecimal cantinaPercent;
+    private Integer registeredStudents;
+    private BigDecimal averageCantinaPerStudent;
+    private BigDecimal averagePedagogicalPerStudent;
+    private Integer orderCount;
     private BigDecimal revenue;
     private BigDecimal expenses;
-    private Integer orderCount;
-    private Integer registeredStudents;
+
+    // Vlupt
+    private BigDecimal profitability;
+    private BigDecimal revenueLoss;
+    private Integer ordersOutsideVpt;
+    private BigDecimal averageTicketApp;
+
     private String notes;
 }

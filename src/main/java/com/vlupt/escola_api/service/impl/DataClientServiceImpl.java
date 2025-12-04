@@ -59,10 +59,17 @@ public class DataClientServiceImpl implements DataClientService {
 
         existing.setClient(data.getClient());
         existing.setMonthDate(data.getMonthDate());
+        existing.setCantinaPercent(data.getCantinaPercent());
+        existing.setRegisteredStudents(data.getRegisteredStudents());
+        existing.setAverageCantinaPerStudent(data.getAverageCantinaPerStudent());
+        existing.setAveragePedagogicalPerStudent(data.getAveragePedagogicalPerStudent());
+        existing.setOrderCount(data.getOrderCount());
         existing.setRevenue(data.getRevenue());
         existing.setExpenses(data.getExpenses());
-        existing.setOrderCount(data.getOrderCount());
-        existing.setRegisteredStudents(data.getRegisteredStudents());
+        existing.setProfitability(data.getProfitability());
+        existing.setRevenueLoss(data.getRevenueLoss());
+        existing.setOrdersOutsideVpt(data.getOrdersOutsideVpt());
+        existing.setAverageTicketApp(data.getAverageTicketApp());
         existing.setNotes(data.getNotes());
 
         return repository.save(existing);
@@ -78,7 +85,6 @@ public class DataClientServiceImpl implements DataClientService {
 
     @Override
     public List<DataClient> filter(DataClientFilterDTO filter) {
-
         String sortField = filter.getSortBy() != null ? filter.getSortBy() : "dataId";
         String direction = filter.getDirection() != null ? filter.getDirection() : "asc";
 
