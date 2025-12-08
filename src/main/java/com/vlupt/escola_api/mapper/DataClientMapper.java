@@ -1,7 +1,6 @@
 package com.vlupt.escola_api.mapper;
 
 import org.springframework.stereotype.Component;
-
 import com.vlupt.escola_api.dto.DataClientRequestDTO;
 import com.vlupt.escola_api.dto.DataClientResponseDTO;
 import com.vlupt.escola_api.model.Client;
@@ -22,7 +21,6 @@ public class DataClientMapper {
                 .averagePedagogicalPerStudent(dto.getAveragePedagogicalPerStudent())
                 .orderCount(dto.getOrderCount())
                 .revenue(dto.getRevenue())
-                .expenses(dto.getExpenses())
                 .profitability(dto.getProfitability())
                 .revenueLoss(dto.getRevenueLoss())
                 .ordersOutsideVpt(dto.getOrdersOutsideVpt())
@@ -34,17 +32,21 @@ public class DataClientMapper {
     public DataClientResponseDTO toResponse(DataClient entity) {
         if (entity == null) return null;
 
+        Client client = entity.getClient();
+
         return DataClientResponseDTO.builder()
                 .dataId(entity.getDataId())
-                .clientId(entity.getClient().getClientId())
+                .clientId(client.getClientId())
                 .monthDate(entity.getMonthDate())
+                .location(client.getLocation())
+                .school(client.getSchoolName())
+                .cafeteria(client.getCafeteriaName())
                 .cantinaPercent(entity.getCantinaPercent())
                 .registeredStudents(entity.getRegisteredStudents())
                 .averageCantinaPerStudent(entity.getAverageCantinaPerStudent())
                 .averagePedagogicalPerStudent(entity.getAveragePedagogicalPerStudent())
                 .orderCount(entity.getOrderCount())
                 .revenue(entity.getRevenue())
-                .expenses(entity.getExpenses())
                 .profitability(entity.getProfitability())
                 .revenueLoss(entity.getRevenueLoss())
                 .ordersOutsideVpt(entity.getOrdersOutsideVpt())

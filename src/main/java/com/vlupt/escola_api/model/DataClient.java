@@ -32,7 +32,7 @@ public class DataClient {
 
     // Colunas da Cantina
     @Column(name = "cantina_percent", precision = 5, scale = 2)
-    private BigDecimal cantinaPercent; // Cantina = Vpt x Escola %
+    private BigDecimal cantinaPercent; // Vpt x Escola %
 
     @Column(name = "registered_students", nullable = false)
     private Integer registeredStudents; // L. Aluno Cad
@@ -48,9 +48,6 @@ public class DataClient {
 
     @Column(name = "revenue", precision = 15, scale = 2)
     private BigDecimal revenue; // Faturamento
-
-    @Column(name = "expenses", precision = 15, scale = 2)
-    private BigDecimal expenses; // Despesas
 
     // Colunas da Vlupt
     @Column(name = "profitability", precision = 10, scale = 2)

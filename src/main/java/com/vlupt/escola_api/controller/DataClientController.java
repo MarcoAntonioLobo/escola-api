@@ -33,12 +33,23 @@ public class DataClientController {
 
     @GetMapping
     public List<DataClientResponseDTO> findAll() {
-        return service.findAll().stream().map(mapper::toResponse).toList();
+        return service.findAll().stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @GetMapping("/filter")
-    public List<DataClientResponseDTO> filter(DataClientFilterDTO filter) {
-        return service.filter(filter).stream().map(mapper::toResponse).toList();
+    public List<DataClientResponseDTO> filter(@ModelAttribute DataClientFilterDTO filter) {
+        if (filter.getLocation() != null && filter.getLocation().isBlank())
+            filter.setLocation(null);
+        if (filter.getSchool() != null && filter.getSchool().isBlank())
+            filter.setSchool(null);
+        if (filter.getCafeteria() != null && filter.getCafeteria().isBlank())
+            filter.setCafeteria(null);
+
+        return service.filter(filter).stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -49,19 +60,27 @@ public class DataClientController {
     }
 
     @PostMapping
-    public ResponseEntity<DataClientResponseDTO> create(@Valid @RequestBody DataClientRequestDTO dto) {
+    public ResponseEntity<DataClientResponseDTO> create(
+            @Valid @RequestBody DataClientRequestDTO dto) {
+
         var client = clientService.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+
         DataClient saved = service.save(mapper.toEntity(dto, client));
+
         return ResponseEntity.status(201).body(mapper.toResponse(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<DataClientResponseDTO> update(@PathVariable Integer id,
-                                                        @Valid @RequestBody DataClientRequestDTO dto) {
+    public ResponseEntity<DataClientResponseDTO> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody DataClientRequestDTO dto) {
+
         var client = clientService.findById(dto.getClientId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado"));
+
         DataClient updated = service.update(id, mapper.toEntity(dto, client));
+
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
@@ -73,6 +92,8 @@ public class DataClientController {
 
     @GetMapping("/client/{clientId}")
     public List<DataClientResponseDTO> findByClient(@PathVariable Integer clientId) {
-        return service.findByClientId(clientId).stream().map(mapper::toResponse).toList();
+        return service.findByClientId(clientId).stream()
+                .map(mapper::toResponse)
+                .toList();
     }
 }

@@ -2,7 +2,6 @@ package com.vlupt.escola_api.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -17,6 +16,16 @@ public class DataClientRequestDTO {
 
     @NotNull
     private LocalDate monthDate;
+    
+    @NotNull
+    private String location;
+    
+    @NotNull
+    private String school;
+    
+    @NotNull
+    private String cafeteria;
+
 
     // Cantina
     private BigDecimal cantinaPercent;
@@ -25,7 +34,6 @@ public class DataClientRequestDTO {
     private BigDecimal averagePedagogicalPerStudent;
     private Integer orderCount;
     private BigDecimal revenue;
-    private BigDecimal expenses;
 
     // Vlupt
     private BigDecimal profitability;

@@ -13,6 +13,10 @@ public class DataClientResponseDTO {
     private Integer dataId;
     private Integer clientId;
     private LocalDate monthDate;
+    private String location;
+    private String school;
+    private String cafeteria;
+
 
     // Cantina
     private BigDecimal cantinaPercent;
@@ -21,7 +25,6 @@ public class DataClientResponseDTO {
     private BigDecimal averagePedagogicalPerStudent;
     private Integer orderCount;
     private BigDecimal revenue;
-    private BigDecimal expenses;
 
     // Vlupt
     private BigDecimal profitability;

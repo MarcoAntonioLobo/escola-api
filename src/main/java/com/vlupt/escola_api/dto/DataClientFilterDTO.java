@@ -9,9 +9,12 @@ import lombok.*;
 @Builder
 public class DataClientFilterDTO {
 
-    private Integer clientId; // Filtra por cliente
-    private LocalDate dateStart; // Data inicial
-    private LocalDate dateEnd;   // Data final
-    private String sortBy;       // Campo de ordenação (ex: "monthDate", "revenue", "expenses")
-    private String direction;    // "asc" ou "desc"
+    private Integer clientId;
+    private LocalDate dateStart;
+    private LocalDate dateEnd;
+    private String sortBy;
+    private String direction;
+    private String location;
+    private String school;
+    private String cafeteria;
 }

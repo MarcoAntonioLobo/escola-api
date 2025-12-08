@@ -25,6 +25,21 @@ public class DataClientSpecification {
                 predicates.add(cb.lessThanOrEqualTo(root.get("monthDate"), filter.getDateEnd()));
             }
 
+            if (filter.getLocation() != null && !filter.getLocation().isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("client").get("location")),
+                        "%" + filter.getLocation().toLowerCase() + "%"));
+            }
+
+            if (filter.getSchool() != null && !filter.getSchool().isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("client").get("schoolName")),
+                        "%" + filter.getSchool().toLowerCase() + "%"));
+            }
+
+            if (filter.getCafeteria() != null && !filter.getCafeteria().isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("client").get("cafeteriaName")),
+                        "%" + filter.getCafeteria().toLowerCase() + "%"));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

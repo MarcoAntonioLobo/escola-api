@@ -24,14 +24,14 @@ export default function ClientsPage() {
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
   // ================================
-  // FETCH CLIENTES (USANDO /filter)
+  // FETCH CLIENTES (COM FILTROS)
   // ================================
   const fetchClients = useCallback(async () => {
     try {
       const params = {};
-      if (schoolFilter && schoolFilter.trim() !== "") params.schoolName = schoolFilter.trim();
-      if (cafeteriaFilter && cafeteriaFilter.trim() !== "") params.cafeteriaName = cafeteriaFilter.trim();
-      if (locationFilter && locationFilter.trim() !== "") params.location = locationFilter.trim();
+      if (schoolFilter.trim()) params.schoolName = schoolFilter.trim();
+      if (cafeteriaFilter.trim()) params.cafeteriaName = cafeteriaFilter.trim();
+      if (locationFilter.trim()) params.location = locationFilter.trim();
 
       const res = await api.get("/clients/filter", { params });
       setAllClients(Array.isArray(res.data) ? res.data : []);
@@ -50,7 +50,7 @@ export default function ClientsPage() {
   }, [schoolFilter, cafeteriaFilter, locationFilter, fetchClients]);
 
   // ================================
-  // PAGINAÇÃO + ORDENAÇÃO (CLIENT-SIDE)
+  // PAGINAÇÃO + ORDENAÇÃO
   // ================================
   useEffect(() => {
     if (!allClients.length) {
@@ -87,7 +87,10 @@ export default function ClientsPage() {
   };
 
   const SortHeader = ({ field, label }) => (
-    <th className="p-2 text-left cursor-pointer select-none" onClick={() => toggleSort(field)}>
+    <th
+      className="p-2 text-left cursor-pointer select-none"
+      onClick={() => toggleSort(field)}
+    >
       <div className="flex items-center gap-1">
         <span>{label}</span>
         <ArrowUpDown
@@ -105,7 +108,7 @@ export default function ClientsPage() {
   );
 
   // ================================
-  // CSV
+  // CSV EXPORT
   // ================================
   const downloadCSV = () => {
     if (!allClients.length) return;
@@ -138,7 +141,7 @@ export default function ClientsPage() {
         <thead>
           <tr style="background-color: #444; color: #fff;">
             <th>Escola</th>
-            <th>Cafeteria</th>
+            <th>Cantina</th>
             <th>Localização</th>
             <th>Alunos</th>
           </tr>
@@ -173,6 +176,7 @@ export default function ClientsPage() {
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
+
         {/* BOTÕES SUPERIOR DIREITA */}
         <div className="absolute top-4 right-4 flex gap-4 z-50">
           <Download
@@ -192,30 +196,29 @@ export default function ClientsPage() {
           />
         </div>
 
-        {/* FILTROS */}
-		{menuOpen && (
-		  <div className="absolute top-12 right-4 z-50 w-80 flex flex-col gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700 shadow-lg">
-		    <input
-		      placeholder="Filtrar por Escola"
-		      value={schoolFilter}
-		      onChange={(e) => setSchoolFilter(e.target.value)}
-		      className="!p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
-		    />
-		    <input
-		      placeholder="Filtrar por Cantina"
-		      value={cafeteriaFilter}
-		      onChange={(e) => setCafeteriaFilter(e.target.value)}
-		      className="!p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
-		    />
-		    <input
-		      placeholder="Filtrar por Localização"
-		      value={locationFilter}
-		      onChange={(e) => setLocationFilter(e.target.value)}
-		      className="!p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
-		    />
-		  </div>
-		)}
-
+        {/* MENU DE FILTROS */}
+        {menuOpen && (
+          <div className="absolute top-12 right-4 z-50 w-80 flex flex-col gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700 shadow-lg">
+            <input
+              placeholder="Filtrar por Escola"
+              value={schoolFilter}
+              onChange={(e) => setSchoolFilter(e.target.value)}
+              className="p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
+            />
+            <input
+              placeholder="Filtrar por Cantina"
+              value={cafeteriaFilter}
+              onChange={(e) => setCafeteriaFilter(e.target.value)}
+              className="p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
+            />
+            <input
+              placeholder="Filtrar por Localização"
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="p-3 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
+            />
+          </div>
+        )}
 
         {/* TABELA */}
         <CardContent className="mb-6 overflow-x-auto mt-16">
@@ -253,7 +256,7 @@ export default function ClientsPage() {
         {/* PAGINAÇÃO */}
         <div className="flex justify-between items-center mt-4 mb-8 w-full">
           <div className="flex items-center gap-2">
-            <span>Exibir: </span>
+            <span>Exibir:</span>
             <select
               value={rowsPerPage}
               onChange={(e) => {

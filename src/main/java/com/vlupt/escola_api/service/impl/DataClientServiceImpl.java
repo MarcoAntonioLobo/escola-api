@@ -65,7 +65,6 @@ public class DataClientServiceImpl implements DataClientService {
         existing.setAveragePedagogicalPerStudent(data.getAveragePedagogicalPerStudent());
         existing.setOrderCount(data.getOrderCount());
         existing.setRevenue(data.getRevenue());
-        existing.setExpenses(data.getExpenses());
         existing.setProfitability(data.getProfitability());
         existing.setRevenueLoss(data.getRevenueLoss());
         existing.setOrdersOutsideVpt(data.getOrdersOutsideVpt());
