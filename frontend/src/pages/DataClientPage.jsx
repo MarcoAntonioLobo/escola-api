@@ -42,6 +42,12 @@ export default function DataClientPage() {
 		averageTicketApp: true,
 	});
 
+	const groupDescription = ["dataId","description","cafeteria","location","studentCount","monthDate"];
+	const groupCantina = ["cantinaPercent","registeredStudents","averageCantinaPerStudent","averagePedagogicalPerStudent","orderCount","revenue"];
+	const groupVlupt = ["profitability","revenueLoss","ordersOutsideVpt","averageTicketApp"];
+
+	const countVisible = (group) => group.filter((col) => visibleColumns[col]).length;
+
 	const VALID_SORT_FIELDS = Object.keys(visibleColumns);
 
 	// ================================
@@ -196,7 +202,7 @@ export default function DataClientPage() {
 					let val = d[col];
 					if (val === null || val === undefined) val = "";
 					if (["revenue", "profitability", "revenueLoss", "averageCantinaPerStudent", "averagePedagogicalPerStudent", "averageTicketApp", "registeredStudents"].includes(col)) val = formatMoney(val);
-					if (["vlupt"].includes(col)) val = formatPercent(val);
+					if (["cantinaPercent"].includes(col)) val = formatPercent(val);
 					if (["orderCount", "ordersOutsideVpt", "studentCount"].includes(col)) val = formatUnit(val);
 					if (col === "monthDate") val = formatDate(val);
 					if (typeof val === "string") val = val.replace(/"/g, '""');
@@ -238,7 +244,6 @@ export default function DataClientPage() {
 	    averageTicketApp: "Ticket M. App."
 	  };
 
-	  // Lista consistente de colunas visíveis que têm label definido
 	  const visibleCols = Object.keys(visibleColumns)
 	    .filter((col) => visibleColumns[col] && columnNames[col] !== undefined);
 
@@ -268,7 +273,6 @@ export default function DataClientPage() {
 	                    val = formatDate(val);
 	                  }
 
-	                  // garantir string segura para HTML
 	                  if (typeof val === "string") val = val.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 	                  return `<td>${val}</td>`;
@@ -350,55 +354,41 @@ export default function DataClientPage() {
 						<thead>
 							{/* LINHA DE AGRUPAMENTO */}
 							<tr>
-								{visibleColumns.description && <th colSpan={6} className="p-2 text-left">Descrição</th>}
-								{visibleColumns.cafeteria && <th colSpan={6} className="p-2 text-left">Cantina</th>}
-								{visibleColumns.vlupt && <th colSpan={4} className="p-2 text-left">Vlupt</th>}
+								{countVisible(groupDescription) > 0 && <th colSpan={countVisible(groupDescription)} className="p-2 text-left">Descrição</th>}
+								{countVisible(groupCantina) > 0 && <th colSpan={countVisible(groupCantina)} className="p-2 text-left">Cantina</th>}
+								{countVisible(groupVlupt) > 0 && <th colSpan={countVisible(groupVlupt)} className="p-2 text-left">Vlupt</th>}
 							</tr>
 
 							{/* LINHA DE SUB-CABECALHO */}
 							<tr>
-								{visibleColumns.description && <SortHeader field="dataId" label="ID" />}
-								{visibleColumns.description && <SortHeader field="description" label="Escola" />}
-								{visibleColumns.cafeteria && <SortHeader field="cafeteria" label="Cantina" />}
-								{visibleColumns.location && <SortHeader field="location" label="Localização" />}
-								{visibleColumns.studentCount && <SortHeader field="studentCount" label="Qtd. Alunos" />}
-								{visibleColumns.monthDate && <SortHeader field="monthDate" label="Data" />}
-								{visibleColumns.cantinaPercent && <SortHeader field="cantinaPercent" label="Vpt x Escola %" />}
-								{visibleColumns.registeredStudents && <SortHeader field="registeredStudents" label="L. Aluno Cad" />}
-								{visibleColumns.averageCantinaPerStudent && <SortHeader field="averageCantinaPerStudent" label="T. Méd Cant." />}
-								{visibleColumns.averagePedagogicalPerStudent && <SortHeader field="averagePedagogicalPerStudent" label="Med. Ped. Aluno" />}
-								{visibleColumns.orderCount && <SortHeader field="orderCount" label="Qtde Pedido M" />}
-								{visibleColumns.revenue && <SortHeader field="revenue" label="Faturamento" />}
-								{visibleColumns.profitability && <SortHeader field="profitability" label="Rentabilidade" />}
-								{visibleColumns.revenueLoss && <SortHeader field="revenueLoss" label="Evasão de $$$" />}
-								{visibleColumns.ordersOutsideVpt && <SortHeader field="ordersOutsideVpt" label="Ped. Fora Vpt" />}
-								{visibleColumns.averageTicketApp && <SortHeader field="averageTicketApp" label="Ticket M. App." />}
+								{groupDescription.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={col === "dataId" ? "ID" : col === "description" ? "Escola" : col === "cafeteria" ? "Cantina" : col === "location" ? "Localização" : col === "studentCount" ? "Qtd. Alunos" : "Data"} />)}
+								{groupCantina.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={{
+									cantinaPercent: "Vpt x Escola %",
+									registeredStudents: "L. Aluno Cad",
+									averageCantinaPerStudent: "T. Méd Cant.",
+									averagePedagogicalPerStudent: "Med. Ped. Aluno",
+									orderCount: "Qtde Pedido M",
+									revenue: "Faturamento"
+								}[col]} />)}
+								{groupVlupt.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={{
+									profitability: "Rentabilidade",
+									revenueLoss: "Evasão de $$$",
+									ordersOutsideVpt: "Ped. Fora Vpt",
+									averageTicketApp: "Ticket M. App."
+								}[col]} />)}
 							</tr>
 						</thead>
 
 						<tbody className="bg-gray-800 divide-y divide-gray-700">
 							{data.length ? data.map((d) => (
 								<tr key={d.dataId} className="hover:bg-gray-700">
-									{visibleColumns.dataId && <td className="p-2">{d.dataId}</td>}
-									{visibleColumns.description && <td className="p-2">{d.description}</td>}
-									{visibleColumns.cafeteria && <td className="p-2">{d.cafeteria}</td>}
-									{visibleColumns.location && <td className="p-2">{d.location}</td>}
-									{visibleColumns.studentCount && <td className="p-2">{formatUnit(d.studentCount)}</td>}
-									{visibleColumns.monthDate && <td className="p-2">{formatDate(d.monthDate)}</td>}
-									{visibleColumns.cantinaPercent && <td className="p-2">{formatPercent(d.cantinaPercent)}</td>}
-									{visibleColumns.registeredStudents && <td className="p-2">{formatMoney(d.registeredStudents)}</td>}
-									{visibleColumns.averageCantinaPerStudent && <td className="p-2">{formatMoney(d.averageCantinaPerStudent)}</td>}
-									{visibleColumns.averagePedagogicalPerStudent && <td className="p-2">{formatMoney(d.averagePedagogicalPerStudent)}</td>}
-									{visibleColumns.orderCount && <td className="p-2">{formatUnit(d.orderCount)}</td>}
-									{visibleColumns.revenue && <td className="p-2">{formatMoney(d.revenue)}</td>}
-									{visibleColumns.profitability && <td className="p-2">{formatMoney(d.profitability)}</td>}
-									{visibleColumns.revenueLoss && <td className="p-2">{formatMoney(d.revenueLoss)}</td>}
-									{visibleColumns.ordersOutsideVpt && <td className="p-2">{formatUnit(d.ordersOutsideVpt)}</td>}
-									{visibleColumns.averageTicketApp && <td className="p-2">{formatMoney(d.averageTicketApp)}</td>}
+									{groupDescription.map((col) => visibleColumns[col] && <td key={col} className="p-2">{col === "studentCount" ? formatUnit(d[col]) : col === "monthDate" ? formatDate(d[col]) : d[col]}</td>)}
+									{groupCantina.map((col) => visibleColumns[col] && <td key={col} className="p-2">{["cantinaPercent"].includes(col) ? formatPercent(d[col]) : ["orderCount","registeredStudents","averageCantinaPerStudent","averagePedagogicalPerStudent","revenue"].includes(col) ? formatMoney(d[col]) : d[col]}</td>)}
+									{groupVlupt.map((col) => visibleColumns[col] && <td key={col} className="p-2">{["profitability","revenueLoss","averageTicketApp"].includes(col) ? formatMoney(d[col]) : ["ordersOutsideVpt"].includes(col) ? formatUnit(d[col]) : d[col]}</td>)}
 								</tr>
 							)) : (
 								<tr>
-									<td colSpan="16" className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
+									<td colSpan={countVisible(groupDescription) + countVisible(groupCantina) + countVisible(groupVlupt)} className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
 								</tr>
 							)}
 						</tbody>
