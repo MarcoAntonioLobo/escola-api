@@ -3,8 +3,12 @@ import { Card, CardContent } from "../components/ui/Card";
 import Pagination from "../components/Pagination";
 import { ArrowUpDown, Printer, Download, MoreVertical, Eye, EyeOff } from "lucide-react";
 import api from "../services/api";
+import * as XLSX from "xlsx";
 
 export default function DataClientPage() {
+	// ===============================
+	// ESTADOS PRINCIPAIS
+	// ===============================
 	const [allData, setAllData] = useState([]);
 	const [data, setData] = useState([]);
 	const [page, setPage] = useState(0);
@@ -29,7 +33,6 @@ export default function DataClientPage() {
 		location: true,
 		studentCount: true,
 		monthDate: true,
-		vlupt: true,
 		cantinaPercent: true,
 		registeredStudents: true,
 		averageCantinaPerStudent: true,
@@ -42,17 +45,48 @@ export default function DataClientPage() {
 		averageTicketApp: true,
 	});
 
-	const groupDescription = ["dataId","description","cafeteria","location","studentCount","monthDate"];
-	const groupCantina = ["cantinaPercent","registeredStudents","averageCantinaPerStudent","averagePedagogicalPerStudent","orderCount","revenue"];
-	const groupVlupt = ["profitability","revenueLoss","ordersOutsideVpt","averageTicketApp"];
+	// ===============================
+	// ESTADOS UPLOAD EXCEL
+	// ===============================
+	const [excelFile, setExcelFile] = useState(null);
+
+	const handleExcelUpload = async () => {
+		if (!excelFile) {
+			alert("Selecione um arquivo!");
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append("file", excelFile);
+		formData.append("table", "client_data");
+
+		try {
+			const response = await api.post("/convert/excel-to-db", formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
+
+			alert(response.data); // Mensagem do backend
+			fetchData(); // Atualiza a tabela após upload
+			setExcelFile(null);
+		} catch (err) {
+			console.error(err);
+			alert("Erro ao enviar arquivo!");
+		}
+	};
+
+	// ===============================
+	// CONFIGURAÇÃO DE COLUNAS
+	// ===============================
+	const groupDescription = ["dataId", "description", "cafeteria", "location", "studentCount", "monthDate"];
+	const groupCantina = ["cantinaPercent", "registeredStudents", "averageCantinaPerStudent", "averagePedagogicalPerStudent", "orderCount", "revenue"];
+	const groupVlupt = ["profitability", "revenueLoss", "ordersOutsideVpt", "averageTicketApp"];
 
 	const countVisible = (group) => group.filter((col) => visibleColumns[col]).length;
-
 	const VALID_SORT_FIELDS = Object.keys(visibleColumns);
 
-	// ================================
+	// ===============================
 	// FETCH DADOS
-	// ================================
+	// ===============================
 	const fetchData = useCallback(async () => {
 		try {
 			const clientsRes = await api.get("/clients");
@@ -95,9 +129,9 @@ export default function DataClientPage() {
 		return () => clearTimeout(t);
 	}, [clientFilter, dateStartFilter, dateEndFilter, locationFilter, schoolFilter, cafeteriaFilter, fetchData]);
 
-	// ================================
-	// PAGINAÇÃO + ORDENAÇÃO
-	// ================================
+	// ===============================
+	// ORDENAÇÃO + PAGINAÇÃO
+	// ===============================
 	useEffect(() => {
 		if (!allData.length) {
 			setData([]);
@@ -144,10 +178,10 @@ export default function DataClientPage() {
 					<ArrowUpDown
 						size={14}
 						className={`transition-all duration-200 ${sortBy === field
-								? direction === "asc"
-									? "text-green-400 rotate-180"
-									: "text-red-400"
-								: "text-gray-300 opacity-40"
+							? direction === "asc"
+								? "text-green-400 rotate-180"
+								: "text-red-400"
+							: "text-gray-300 opacity-40"
 							}`}
 					/>
 				</span>
@@ -158,20 +192,91 @@ export default function DataClientPage() {
 		</th>
 	);
 
-	// ================================
+	// ===============================
 	// FORMATAÇÃO
-	// ================================
-	const formatMoney = (value) => value != null ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value) : "-";
-	const formatPercent = (value) => value != null ? `${(value * 100).toFixed(2)}%` : "-";
-	const formatUnit = (value) => value != null ? new Intl.NumberFormat("pt-BR").format(value) : "-";
-	const formatDate = (value) => value ? new Date(value).toLocaleDateString("pt-BR") : "-";
+	// ===============================
+	const formatMoney = (value) =>
+		value != null ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value) : "-";
+	const formatPercent = (value) => (value != null ? `${(value * 100).toFixed(2)}%` : "-");
+	const formatUnit = (value) => (value != null ? new Intl.NumberFormat("pt-BR").format(value) : "-");
+	const formatDate = (value) => (value ? new Date(value).toLocaleDateString("pt-BR") : "-");
 
-	// ================================
-	// CSV EXPORT (FORMATADO)
-	// ================================
-	const downloadCSV = () => {
+	// ===============================
+	// EXPORT XLSX
+	// ===============================
+	const downloadXLSX = () => {
 		if (!allData.length) return;
 
+		// Pega apenas colunas visíveis
+		const visibleCols = Object.keys(visibleColumns).filter(col => visibleColumns[col]);
+
+		// Prepara cada linha com valores CRUS (sem formatação visual)
+		const formattedData = allData.map((d) => {
+			const row = {};
+
+			visibleCols.forEach((col) => {
+				let val = d[col];
+
+				if (val === null || val === undefined) {
+					row[col] = "";
+					return;
+				}
+
+				// ===== TRATAMENTO ESPECIAL =====
+				if (col === "monthDate") {
+					row[col] = new Date(val);
+				}
+				else if (col === "cantinaPercent") {
+					row[col] = Number(val);
+				}
+				else if ([
+					"revenue",
+					"profitability",
+					"revenueLoss",
+					"averageCantinaPerStudent",
+					"averagePedagogicalPerStudent",
+					"averageTicketApp"
+				].includes(col)) {
+					row[col] = Number(val);
+				}
+				else if ([
+					"orderCount",
+					"ordersOutsideVpt",
+					"studentCount",
+					"registeredStudents"
+				].includes(col)) {
+					// Valores inteiros
+					row[col] = Number(val);
+				}
+				else {
+					row[col] = val;
+				}
+			});
+
+			return row;
+		});
+
+		// Cria planilha no padrão certo
+		const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+		// Ajusta colunas automaticamente
+		const columnWidths = visibleCols.map(col => ({
+			wch: Math.max(10, col.length + 3)
+		}));
+		worksheet['!cols'] = columnWidths;
+
+		// Cria arquivo
+		const workbook = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(workbook, worksheet, "Client Data");
+		XLSX.writeFile(workbook, "client_data.xlsx");
+	};
+
+
+	// ===============================
+	// IMPRESSÃO
+	// ===============================
+	const handlePrint = () => {
+		if (!data.length) return;
 		const columnNames = {
 			dataId: "ID",
 			description: "Escola",
@@ -188,181 +293,84 @@ export default function DataClientPage() {
 			profitability: "Rentabilidade",
 			revenueLoss: "Evasão de $$$",
 			ordersOutsideVpt: "Ped. Fora Vpt",
-			averageTicketApp: "Ticket M. App."
+			averageTicketApp: "Ticket M. App.",
 		};
-
-		const headers = Object.keys(visibleColumns)
-			.filter((col) => visibleColumns[col])
-			.map((col) => `"${columnNames[col]}"`);
-
-		const rows = allData.map((d) =>
-			Object.keys(visibleColumns)
-				.filter((col) => visibleColumns[col])
-				.map((col) => {
-					let val = d[col];
-					if (val === null || val === undefined) val = "";
-					if (["revenue", "profitability", "revenueLoss", "averageCantinaPerStudent", "averagePedagogicalPerStudent", "averageTicketApp", "registeredStudents"].includes(col)) val = formatMoney(val);
-					if (["cantinaPercent"].includes(col)) val = formatPercent(val);
-					if (["orderCount", "ordersOutsideVpt", "studentCount"].includes(col)) val = formatUnit(val);
-					if (col === "monthDate") val = formatDate(val);
-					if (typeof val === "string") val = val.replace(/"/g, '""');
-					return `"${val}"`;
-				})
-		);
-
-		const csvContent =
-			"data:text/csv;charset=utf-8," + [headers, ...rows].map((e) => e.join(",")).join("\n");
-
-		const link = document.createElement("a");
-		link.href = encodeURI(csvContent);
-		link.download = "client_data.csv";
-		link.click();
+		const visibleCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && columnNames[col] !== undefined);
+		const tableHtml = `<table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+      <thead>
+        <tr style="background-color: #444; color: #fff;">
+          ${visibleCols.map(col => `<th>${columnNames[col]}</th>`).join("")}
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `<tr>${visibleCols.map(col => `<td>${d[col] ?? ""}</td>`).join("")}</tr>`).join("")}
+      </tbody>
+    </table>`;
+		const WinPrint = window.open("", "", "width=900,height=650");
+		WinPrint.document.write("<html><head><title>Client Data</title></head><body>");
+		WinPrint.document.write("<h2 style='text-align:center;'>Client Data</h2>");
+		WinPrint.document.write(tableHtml);
+		WinPrint.document.write("</body></html>");
+		WinPrint.document.close();
+		WinPrint.focus();
+		WinPrint.print();
+		WinPrint.close();
 	};
 
-	// ================================
-	// IMPRESSÃO (FORMATADO)
-	// ================================
-	const handlePrint = () => {
-	  if (!data.length) return;
-
-	  const columnNames = {
-	    dataId: "ID",
-	    description: "Escola",
-	    cafeteria: "Cantina",
-	    location: "Localização",
-	    studentCount: "Qtd. Alunos",
-	    monthDate: "Data",
-	    cantinaPercent: "Vpt x Escola %",
-	    registeredStudents: "L. Aluno Cad",
-	    averageCantinaPerStudent: "T. Méd Cant.",
-	    averagePedagogicalPerStudent: "Med. Ped. Aluno",
-	    orderCount: "Qtde Pedido M",
-	    revenue: "Faturamento",
-	    profitability: "Rentabilidade",
-	    revenueLoss: "Evasão de $$$",
-	    ordersOutsideVpt: "Ped. Fora Vpt",
-	    averageTicketApp: "Ticket M. App."
-	  };
-
-	  const visibleCols = Object.keys(visibleColumns)
-	    .filter((col) => visibleColumns[col] && columnNames[col] !== undefined);
-
-	  const tableHtml = `
-	    <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
-	      <thead>
-	        <tr style="background-color: #444; color: #fff;">
-	          ${visibleCols.map((col) => `<th>${columnNames[col]}</th>`).join("")}
-	        </tr>
-	      </thead>
-	      <tbody>
-	        ${data
-	          .map((d) => {
-	            return `<tr>${
-	              visibleCols
-	                .map((col) => {
-	                  let val = d[col];
-	                  if (val === null || val === undefined) val = "";
-
-	                  if (["revenue", "profitability", "revenueLoss", "averageCantinaPerStudent", "averagePedagogicalPerStudent", "averageTicketApp", "registeredStudents"].includes(col)) {
-	                    val = formatMoney(val);
-	                  } else if (["cantinaPercent"].includes(col)) {
-	                    val = formatPercent(val);
-	                  } else if (["orderCount", "ordersOutsideVpt", "studentCount"].includes(col)) {
-	                    val = formatUnit(val);
-	                  } else if (col === "monthDate") {
-	                    val = formatDate(val);
-	                  }
-
-	                  if (typeof val === "string") val = val.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-	                  return `<td>${val}</td>`;
-	                })
-	                .join("")
-	            }</tr>`;
-	          })
-	          .join("")}
-	      </tbody>
-	    </table>
-	  `;
-
-	  const WinPrint = window.open("", "", "width=900,height=650");
-	  WinPrint.document.write("<html><head><title>Client Data</title></head><body>");
-	  WinPrint.document.write("<h2 style='text-align:center;'>Client Data</h2>");
-	  WinPrint.document.write(tableHtml);
-	  WinPrint.document.write("</body></html>");
-	  WinPrint.document.close();
-	  WinPrint.focus();
-	  WinPrint.print();
-	  WinPrint.close();
-	};
-
-	// ================================
+	// ===============================
 	// RENDER
-	// ================================
+	// ===============================
 	return (
 		<div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
 			<Card className="relative w-full max-w-7xl">
+				{/* BOTÕES SUPERIORES */}
 				<div className="absolute top-4 right-4 flex gap-2 z-50">
-					<Download size={23} className="cursor-pointer" onClick={downloadCSV} />
+					<Download size={23} className="cursor-pointer" onClick={downloadXLSX} />
 					<Printer size={23} className="cursor-pointer" onClick={handlePrint} />
 					<MoreVertical size={23} className="cursor-pointer" onClick={() => setMenuOpen(!menuOpen)} />
 				</div>
 
+				{/* UPLOAD EXCEL */}
+				<CardContent className="mt-6 mb-6 px-6 py-4 bg-gray-800 rounded-lg border border-gray-700">
+					<h2 className="text-xl font-bold mb-4"></h2>
+					<div className="flex flex-col gap-3">
+						<input type="file" accept=".xlsx" onChange={(e) => setExcelFile(e.target.files[0])} className="p-2 border border-gray-700 rounded bg-gray-900" />
+						<button onClick={handleExcelUpload} className="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg font-bold">Enviar</button>
+					</div>
+				</CardContent>
+
+				{/* FILTROS */}
 				{menuOpen && (
 					<CardContent className="mb-6 flex flex-col gap-4 px-6 py-4 bg-gray-900 rounded-lg border border-gray-700">
-						<input
-							placeholder="Filtrar por Escola"
-							value={schoolFilter}
-							onChange={(e) => setSchoolFilter(e.target.value)}
-							className="input"
-						/>
-						<input
-							placeholder="Filtrar por Cantina"
-							value={cafeteriaFilter}
-							onChange={(e) => setCafeteriaFilter(e.target.value)}
-							className="input"
-						/>
-						<input
-							placeholder="Filtrar por Localização"
-							value={locationFilter}
-							onChange={(e) => setLocationFilter(e.target.value)}
-							className="input"
-						/>
-						<input
-							type="text"
-							placeholder="Data Inicial"
-							value={dateStartFilter}
-							onFocus={(e) => e.target.type = "date"}
-							onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-							onChange={(e) => setDateStartFilter(e.target.value)}
-							className="input"
-						/>
-						<input
-							type="text"
-							placeholder="Data Final"
-							value={dateEndFilter}
-							onFocus={(e) => e.target.type = "date"}
-							onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-							onChange={(e) => setDateEndFilter(e.target.value)}
-							className="input"
-						/>
+						<input placeholder="Filtrar por Escola" value={schoolFilter} onChange={(e) => setSchoolFilter(e.target.value)} className="input" />
+						<input placeholder="Filtrar por Cantina" value={cafeteriaFilter} onChange={(e) => setCafeteriaFilter(e.target.value)} className="input" />
+						<input placeholder="Filtrar por Localização" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)} className="input" />
+						<input type="text" placeholder="Data Inicial" value={dateStartFilter} onFocus={(e) => (e.target.type = "date")} onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} onChange={(e) => setDateStartFilter(e.target.value)} className="input" />
+						<input type="text" placeholder="Data Final" value={dateEndFilter} onFocus={(e) => (e.target.type = "date")} onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }} onChange={(e) => setDateEndFilter(e.target.value)} className="input" />
 					</CardContent>
 				)}
 
+				{/* TABELA */}
 				<CardContent className="mb-6 px-6 py-4 overflow-x-auto">
 					<table className="min-w-full border border-gray-700 divide-y divide-gray-700 rounded-lg overflow-hidden shadow-lg">
 						<thead>
-							{/* LINHA DE AGRUPAMENTO */}
 							<tr>
 								{countVisible(groupDescription) > 0 && <th colSpan={countVisible(groupDescription)} className="p-2 text-left">Descrição</th>}
 								{countVisible(groupCantina) > 0 && <th colSpan={countVisible(groupCantina)} className="p-2 text-left">Cantina</th>}
 								{countVisible(groupVlupt) > 0 && <th colSpan={countVisible(groupVlupt)} className="p-2 text-left">Vlupt</th>}
 							</tr>
 
-							{/* LINHA DE SUB-CABECALHO */}
 							<tr>
-								{groupDescription.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={col === "dataId" ? "ID" : col === "description" ? "Escola" : col === "cafeteria" ? "Cantina" : col === "location" ? "Localização" : col === "studentCount" ? "Qtd. Alunos" : "Data"} />)}
-								{groupCantina.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={{
+								{groupDescription.map(col => visibleColumns[col] && <SortHeader key={col} field={col} label={{
+									dataId: "ID",
+									description: "Escola",
+									cafeteria: "Cantina",
+									location: "Localização",
+									studentCount: "Qtd. Alunos",
+									monthDate: "Data"
+								}[col]} />)}
+
+								{groupCantina.map(col => visibleColumns[col] && <SortHeader key={col} field={col} label={{
 									cantinaPercent: "Vpt x Escola %",
 									registeredStudents: "L. Aluno Cad",
 									averageCantinaPerStudent: "T. Méd Cant.",
@@ -370,7 +378,8 @@ export default function DataClientPage() {
 									orderCount: "Qtde Pedido M",
 									revenue: "Faturamento"
 								}[col]} />)}
-								{groupVlupt.map((col) => visibleColumns[col] && <SortHeader key={col} field={col} label={{
+
+								{groupVlupt.map(col => visibleColumns[col] && <SortHeader key={col} field={col} label={{
 									profitability: "Rentabilidade",
 									revenueLoss: "Evasão de $$$",
 									ordersOutsideVpt: "Ped. Fora Vpt",
@@ -380,15 +389,53 @@ export default function DataClientPage() {
 						</thead>
 
 						<tbody className="bg-gray-800 divide-y divide-gray-700">
-							{data.length ? data.map((d) => (
+							{data.length ? data.map(d => (
 								<tr key={d.dataId} className="hover:bg-gray-700">
-									{groupDescription.map((col) => visibleColumns[col] && <td key={col} className="p-2">{col === "studentCount" ? formatUnit(d[col]) : col === "monthDate" ? formatDate(d[col]) : d[col]}</td>)}
-									{groupCantina.map((col) => visibleColumns[col] && <td key={col} className="p-2">{["cantinaPercent"].includes(col) ? formatPercent(d[col]) : ["orderCount","registeredStudents","averageCantinaPerStudent","averagePedagogicalPerStudent","revenue"].includes(col) ? formatMoney(d[col]) : d[col]}</td>)}
-									{groupVlupt.map((col) => visibleColumns[col] && <td key={col} className="p-2">{["profitability","revenueLoss","averageTicketApp"].includes(col) ? formatMoney(d[col]) : ["ordersOutsideVpt"].includes(col) ? formatUnit(d[col]) : d[col]}</td>)}
+									{groupDescription.map(col => visibleColumns[col] && (
+										<td key={col} className="p-2">
+											{col === "studentCount"
+												? formatUnit(d[col])
+												: col === "monthDate"
+													? formatDate(d[col])
+													: d[col]}
+										</td>
+									))}
+
+									{groupCantina.map(col => visibleColumns[col] && (
+										<td key={col} className="p-2">
+											{col === "cantinaPercent"
+												? formatPercent(d[col])
+												: ["registeredStudents", "orderCount"].includes(col)
+													? formatUnit(d[col])
+													: col === "averagePedagogicalPerStudent"
+														? formatUnit(d[col], 1)
+														: ["averageCantinaPerStudent", "revenue"].includes(col)
+															? formatMoney(d[col])
+															: d[col]}
+										</td>
+									))}
+
+
+									{groupVlupt.map(col => visibleColumns[col] && (
+										<td key={col} className="p-2">
+											{["ordersOutsideVpt"].includes(col)
+												? formatUnit(d[col])
+												: formatMoney(d[col])}
+										</td>
+									))}
 								</tr>
 							)) : (
 								<tr>
-									<td colSpan={countVisible(groupDescription) + countVisible(groupCantina) + countVisible(groupVlupt)} className="text-center p-4 text-gray-400">Nenhum dado disponível</td>
+									<td
+										colSpan={
+											countVisible(groupDescription) +
+											countVisible(groupCantina) +
+											countVisible(groupVlupt)
+										}
+										className="text-center p-4 text-gray-400"
+									>
+										Nenhum dado disponível
+									</td>
 								</tr>
 							)}
 						</tbody>
@@ -398,14 +445,7 @@ export default function DataClientPage() {
 				<div className="flex justify-between items-center mt-4 mb-8 w-full">
 					<div className="flex items-center gap-2">
 						<span>Exibir:</span>
-						<select
-							value={rowsPerPage}
-							onChange={(e) => {
-								setRowsPerPage(Number(e.target.value));
-								setPage(0);
-							}}
-							className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100"
-						>
+						<select value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }} className="p-2 border border-gray-700 rounded-lg bg-gray-900 text-gray-100">
 							<option value={10}>10 Linhas</option>
 							<option value={25}>25 Linhas</option>
 							<option value={50}>50 Linhas</option>
