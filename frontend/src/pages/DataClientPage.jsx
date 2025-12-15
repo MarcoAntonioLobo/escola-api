@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "../components/ui/Card";
 import Pagination from "../components/Pagination";
-import { ArrowUpDown, Printer, Download, MoreVertical, Eye, EyeOff } from "lucide-react";
+import { ArrowUpDown, Printer, Download, Search, Eye, EyeOff, FolderUp } from "lucide-react";
 import api from "../services/api";
 import * as XLSX from "xlsx";
 
@@ -23,6 +23,7 @@ export default function DataClientPage() {
 	const [schoolFilter, setSchoolFilter] = useState("");
 	const [cafeteriaFilter, setCafeteriaFilter] = useState("");
 
+	const [showUpload, setShowUpload] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
 	const [rowsPerPage, setRowsPerPage] = useState(50);
 
@@ -65,8 +66,8 @@ export default function DataClientPage() {
 				headers: { "Content-Type": "multipart/form-data" },
 			});
 
-			alert(response.data); // Mensagem do backend
-			fetchData(); // Atualiza a tabela após upload
+			alert(response.data);
+			fetchData();
 			setExcelFile(null);
 		} catch (err) {
 			console.error(err);
@@ -207,10 +208,8 @@ export default function DataClientPage() {
 	const downloadXLSX = () => {
 		if (!allData.length) return;
 
-		// Pega apenas colunas visíveis
 		const visibleCols = Object.keys(visibleColumns).filter(col => visibleColumns[col]);
 
-		// Prepara cada linha com valores CRUS (sem formatação visual)
 		const formattedData = allData.map((d) => {
 			const row = {};
 
@@ -245,7 +244,6 @@ export default function DataClientPage() {
 					"studentCount",
 					"registeredStudents"
 				].includes(col)) {
-					// Valores inteiros
 					row[col] = Number(val);
 				}
 				else {
@@ -256,16 +254,13 @@ export default function DataClientPage() {
 			return row;
 		});
 
-		// Cria planilha no padrão certo
 		const worksheet = XLSX.utils.json_to_sheet(formattedData);
 
-		// Ajusta colunas automaticamente
 		const columnWidths = visibleCols.map(col => ({
 			wch: Math.max(10, col.length + 3)
 		}));
 		worksheet['!cols'] = columnWidths;
 
-		// Cria arquivo
 		const workbook = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(workbook, worksheet, "Client Data");
 		XLSX.writeFile(workbook, "client_data.xlsx");
@@ -275,8 +270,41 @@ export default function DataClientPage() {
 	// ===============================
 	// IMPRESSÃO
 	// ===============================
+	const formatPrintValue = (col, value) => {
+		if (value === null || value === undefined) return "";
+
+		switch (col) {
+			case "monthDate":
+				return new Date(value).toLocaleDateString("pt-BR");
+
+			case "cantinaPercent":
+				return `${(value * 100).toFixed(2)}%`;
+
+			case "revenue":
+			case "profitability":
+			case "revenueLoss":
+			case "averageCantinaPerStudent":
+			case "averagePedagogicalPerStudent":
+			case "averageTicketApp":
+				return new Intl.NumberFormat("pt-BR", {
+					style: "currency",
+					currency: "BRL",
+				}).format(value);
+
+			case "orderCount":
+			case "ordersOutsideVpt":
+			case "studentCount":
+			case "registeredStudents":
+				return new Intl.NumberFormat("pt-BR").format(value);
+
+			default:
+				return value;
+		}
+	};
+
 	const handlePrint = () => {
 		if (!data.length) return;
+
 		const columnNames = {
 			dataId: "ID",
 			description: "Escola",
@@ -295,27 +323,52 @@ export default function DataClientPage() {
 			ordersOutsideVpt: "Ped. Fora Vpt",
 			averageTicketApp: "Ticket M. App.",
 		};
-		const visibleCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && columnNames[col] !== undefined);
-		const tableHtml = `<table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
-      <thead>
-        <tr style="background-color: #444; color: #fff;">
-          ${visibleCols.map(col => `<th>${columnNames[col]}</th>`).join("")}
-        </tr>
-      </thead>
-      <tbody>
-        ${data.map(d => `<tr>${visibleCols.map(col => `<td>${d[col] ?? ""}</td>`).join("")}</tr>`).join("")}
-      </tbody>
-    </table>`;
+
+		const visibleCols = Object.keys(visibleColumns).filter(
+			(col) => visibleColumns[col] && columnNames[col] !== undefined
+		);
+
+		const tableHtml = `
+		<table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; width: 100%;">
+			<thead>
+				<tr style="background-color: #444; color: #fff;">
+					${visibleCols.map(col => `<th>${columnNames[col]}</th>`).join("")}
+				</tr>
+			</thead>
+			<tbody>
+				${data
+					.map(
+						d => `
+						<tr>
+							${visibleCols
+								.map(col => `<td>${formatPrintValue(col, d[col])}</td>`)
+								.join("")}
+						</tr>
+					`
+					)
+					.join("")}
+			</tbody>
+		</table>
+		`;
+
 		const WinPrint = window.open("", "", "width=900,height=650");
-		WinPrint.document.write("<html><head><title>Client Data</title></head><body>");
-		WinPrint.document.write("<h2 style='text-align:center;'>Client Data</h2>");
-		WinPrint.document.write(tableHtml);
-		WinPrint.document.write("</body></html>");
+		WinPrint.document.write(`
+			<html>
+				<head>
+					<title>Client Data</title>
+				</head>
+				<body>
+					<h2 style="text-align:center;">Client Data</h2>
+					${tableHtml}
+				</body>
+			</html>
+		`);
 		WinPrint.document.close();
 		WinPrint.focus();
 		WinPrint.print();
 		WinPrint.close();
 	};
+
 
 	// ===============================
 	// RENDER
@@ -325,19 +378,37 @@ export default function DataClientPage() {
 			<Card className="relative w-full max-w-7xl">
 				{/* BOTÕES SUPERIORES */}
 				<div className="absolute top-4 right-4 flex gap-2 z-50">
-					<Download size={23} className="cursor-pointer" onClick={downloadXLSX} />
-					<Printer size={23} className="cursor-pointer" onClick={handlePrint} />
-					<MoreVertical size={23} className="cursor-pointer" onClick={() => setMenuOpen(!menuOpen)} />
+					<Download size={28} className="cursor-pointer" onClick={downloadXLSX} />
+					<Printer size={28} className="cursor-pointer" onClick={handlePrint} />
+					<Search size={28} className="cursor-pointer" onClick={() => setMenuOpen(!menuOpen)} />
+					<FolderUp
+						size={28}
+						className="cursor-pointer"
+						onClick={() => setShowUpload((prev) => !prev)}
+						title="Upload Excel"
+					/>
 				</div>
 
-				{/* UPLOAD EXCEL */}
-				<CardContent className="mt-6 mb-6 px-6 py-4 bg-gray-800 rounded-lg border border-gray-700">
-					<h2 className="text-xl font-bold mb-4"></h2>
-					<div className="flex flex-col gap-3">
-						<input type="file" accept=".xlsx" onChange={(e) => setExcelFile(e.target.files[0])} className="p-2 border border-gray-700 rounded bg-gray-900" />
-						<button onClick={handleExcelUpload} className="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg font-bold">Enviar</button>
-					</div>
-				</CardContent>
+				{/* UPLOAD EXCEL OCULTO */}
+				{showUpload && (
+					<CardContent className="mt-16 mb-6 px-6 py-4 bg-gray-800 rounded-lg border border-gray-700">
+						<h2 className="text-xl font-bold mb-4">Insira aqui a planilha excel</h2>
+						<div className="flex flex-col gap-3">
+							<input
+								type="file"
+								accept=".xlsx"
+								onChange={(e) => setExcelFile(e.target.files[0])}
+								className="p-2 border border-gray-700 rounded bg-gray-900"
+							/>
+							<button
+								onClick={handleExcelUpload}
+								className="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg font-bold"
+							>
+								Enviar
+							</button>
+						</div>
+					</CardContent>
+				)}
 
 				{/* FILTROS */}
 				{menuOpen && (

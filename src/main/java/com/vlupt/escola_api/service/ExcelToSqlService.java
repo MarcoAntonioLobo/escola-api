@@ -3,7 +3,6 @@ package com.vlupt.escola_api.service;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.List;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -23,107 +23,199 @@ public class ExcelToSqlService {
     }
 
     // ======================================================
-    // 1️⃣ INSERE DIRETO NO BANCO - SEPARANDO CLIENT E CLIENT_DATA
+    // INSERE DIRETO NO BANCO (CLIENT + CLIENT_DATA)
     // ======================================================
+    @Transactional
     public void saveToDatabase(InputStream is) throws Exception {
+
         try (Workbook workbook = WorkbookFactory.create(is)) {
+
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
-            if (!rows.hasNext()) return;
+
+            if (!rows.hasNext()) {
+                throw new IllegalArgumentException("Planilha Excel vazia.");
+            }
 
             Row headerRow = rows.next();
             List<String> columns = readAndNormalizeHeader(headerRow);
+            validateHeader(columns);
+
+            List<String> clientCols = List.of(
+                    "school_name",
+                    "cafeteria_name",
+                    "location",
+                    "student_count"
+            );
 
             while (rows.hasNext()) {
-                Row row = rows.next();
-                if (isRowEmpty(row, row.getLastCellNum())) continue;
 
-                // ===== 1. INSERIR CLIENT =====
-                List<String> clientCols = List.of("school_name", "cafeteria_name", "location", "student_count");
+                Row row = rows.next();
+                if (isRowEmpty(row, columns.size())) continue;
+
+                // ==================================================
+                // 1️⃣ BUSCA OU CRIA CLIENT
+                // ==================================================
                 List<Object> clientValues = new ArrayList<>();
+
                 for (String col : clientCols) {
                     int idx = columns.indexOf(col);
-                    if (idx >= 0) clientValues.add(toJdbcValue(row.getCell(idx, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK)));
+                    if (idx < 0) {
+                        throw new IllegalArgumentException("Coluna obrigatória ausente: " + col);
+                    }
+                    clientValues.add(
+                            toJdbcValue(row.getCell(idx, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK))
+                    );
                 }
 
-                String clientSql = String.format(
-                        "INSERT INTO client (%s) VALUES (%s)",
-                        String.join(",", clientCols),
-                        String.join(",", clientCols.stream().map(c -> "?").toArray(String[]::new))
+                Long clientId = findClientId(
+                        clientValues.get(0),
+                        clientValues.get(1),
+                        clientValues.get(2)
                 );
-                jdbcTemplate.update(clientSql, clientValues.toArray());
 
-                Long clientId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+                if (clientId == null) {
+                    jdbcTemplate.update(
+                            """
+                            INSERT INTO client (school_name, cafeteria_name, location, student_count)
+                            VALUES (?, ?, ?, ?)
+                            """,
+                            clientValues.toArray()
+                    );
+                    clientId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+                }
 
-                // ===== 2. INSERIR CLIENT_DATA =====
-                List<String> clientDataCols = new ArrayList<>();
-                List<Object> clientDataValues = new ArrayList<>();
+                // ==================================================
+                // 2️⃣ UPSERT CLIENT_DATA
+                // ==================================================
+                List<String> dataCols = new ArrayList<>();
+                List<Object> dataValues = new ArrayList<>();
+
                 for (int i = 0; i < columns.size(); i++) {
                     String col = columns.get(i);
-                    if (clientCols.contains(col)) continue;            // Ignora colunas de client
-                    if (col.equalsIgnoreCase("client_id")) continue;   // Ignora client_id do Excel
-                    clientDataCols.add(col);
-                    clientDataValues.add(toJdbcValue(row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK)));
+                    if (clientCols.contains(col)) continue;
+                    if ("client_id".equals(col)) continue;
+
+                    dataCols.add(col);
+                    dataValues.add(
+                            toJdbcValue(row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK))
+                    );
                 }
 
-                // Adiciona a FK client_id
-                clientDataCols.add("client_id");
-                clientDataValues.add(clientId);
+                dataCols.add("client_id");
+                dataValues.add(clientId);
 
-                String clientDataSql = String.format(
-                        "INSERT INTO client_data (%s) VALUES (%s)",
-                        String.join(",", clientDataCols),
-                        String.join(",", clientDataCols.stream().map(c -> "?").toArray(String[]::new))
-                );
-                jdbcTemplate.update(clientDataSql, clientDataValues.toArray());
+                String insertCols = String.join(",", dataCols);
+                String placeholders = String.join(",", dataCols.stream().map(c -> "?").toList());
+
+                String updateClause = dataCols.stream()
+                        .filter(c -> !c.equals("client_id") && !c.equals("month_date"))
+                        .map(c -> c + " = VALUES(" + c + ")")
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("");
+
+                String sql = """
+                    INSERT INTO client_data (%s)
+                    VALUES (%s)
+                    ON DUPLICATE KEY UPDATE %s
+                    """.formatted(insertCols, placeholders, updateClause);
+
+                jdbcTemplate.update(sql, dataValues.toArray());
             }
         }
     }
 
     // ======================================================
-    // 2️⃣ GERA SQL EM MEMÓRIA (APENAS TEXTO, NÃO EXECUTA)
+    // GERA SQL EM MEMÓRIA (NÃO EXECUTA)
     // ======================================================
     public List<String> convert(InputStream is, String tableName) throws Exception {
+
         try (Workbook workbook = WorkbookFactory.create(is)) {
+
             Sheet sheet = workbook.getSheetAt(0);
             Iterator<Row> rows = sheet.iterator();
             List<String> sqlLines = new ArrayList<>();
+
             if (!rows.hasNext()) return sqlLines;
 
             List<String> columns = readAndNormalizeHeader(rows.next());
-            columns.removeIf(c -> c.equalsIgnoreCase("dataId"));
+            columns.removeIf(c -> c.equalsIgnoreCase("data_id"));
 
             while (rows.hasNext()) {
+
                 Row row = rows.next();
-                if (isRowEmpty(row, row.getLastCellNum())) continue;
+                if (isRowEmpty(row, columns.size())) continue;
 
                 List<String> values = new ArrayList<>();
+
                 for (int i = 0; i < columns.size(); i++) {
-                    Cell cell = row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                    values.add(toSqlLiteral(cell));
+                    values.add(toSqlLiteral(
+                            row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK)
+                    ));
                 }
 
-                String sql = String.format(
-                        "INSERT INTO %s (%s) VALUES (%s);",
-                        tableName,
-                        String.join(",", columns),
-                        String.join(",", values)
+                sqlLines.add(
+                        "INSERT INTO %s (%s) VALUES (%s);"
+                                .formatted(tableName, String.join(",", columns), String.join(",", values))
                 );
-                sqlLines.add(sql);
             }
+
             return sqlLines;
         }
     }
 
     // ======================================================
-    // MÉTODOS AUXILIARES
+    // AUXILIARES
     // ======================================================
+
+    private Long findClientId(Object school, Object cafeteria, Object location) {
+        return jdbcTemplate.query(
+                """
+                SELECT client_id
+                FROM client
+                WHERE school_name = ?
+                  AND cafeteria_name = ?
+                  AND location = ?
+                """,
+                rs -> rs.next() ? rs.getLong("client_id") : null,
+                school, cafeteria, location
+        );
+    }
+
+    private void validateHeader(List<String> columns) {
+
+        List<String> expected = List.of(
+                "school_name",
+                "cafeteria_name",
+                "location",
+                "student_count",
+                "month_date",
+                "cantina_percent",
+                "registered_students",
+                "average_cantina_per_student",
+                "average_pedagogical_per_student",
+                "order_count",
+                "revenue",
+                "profitability",
+                "revenue_loss",
+                "orders_outside_vpt",
+                "average_ticket_app"
+        );
+
+        if (!columns.containsAll(expected)) {
+            throw new IllegalArgumentException("Header do Excel não corresponde ao modelo esperado.");
+        }
+    }
+
     private List<String> readAndNormalizeHeader(Row headerRow) {
         List<String> columns = new ArrayList<>();
+
         for (Cell cell : headerRow) {
             String col = cell.getStringCellValue();
-            if (!StringUtils.hasText(col)) throw new IllegalArgumentException("Nome de coluna vazio no Excel.");
-            columns.add(col.trim().replaceAll("\\s+", "_"));
+            if (!StringUtils.hasText(col)) {
+                throw new IllegalArgumentException("Nome de coluna vazio no Excel.");
+            }
+            columns.add(col.trim().toLowerCase().replaceAll("\\s+", "_"));
         }
         return columns;
     }
@@ -133,6 +225,7 @@ public class ExcelToSqlService {
             Cell cell = row.getCell(i, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
             CellType type = cell.getCellType();
             if (type == CellType.FORMULA) type = cell.getCachedFormulaResultType();
+
             if (type != CellType.BLANK) {
                 if (type == CellType.STRING && !cell.getStringCellValue().trim().isEmpty()) return false;
                 if (type != CellType.STRING) return false;
@@ -145,32 +238,27 @@ public class ExcelToSqlService {
         CellType type = cell.getCellType();
         if (type == CellType.FORMULA) type = cell.getCachedFormulaResultType();
 
-        switch (type) {
-            case STRING: return cell.getStringCellValue().trim();
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) return Date.valueOf(cell.getLocalDateTimeCellValue().toLocalDate());
-                return BigDecimal.valueOf(cell.getNumericCellValue());
-            case BOOLEAN: return cell.getBooleanCellValue();
-            case BLANK:
-            default: return null;
-        }
+        return switch (type) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> DateUtil.isCellDateFormatted(cell)
+                    ? Date.valueOf(cell.getLocalDateTimeCellValue().toLocalDate())
+                    : BigDecimal.valueOf(cell.getNumericCellValue());
+            case BOOLEAN -> cell.getBooleanCellValue();
+            default -> null;
+        };
     }
 
     private String toSqlLiteral(Cell cell) {
         CellType type = cell.getCellType();
         if (type == CellType.FORMULA) type = cell.getCachedFormulaResultType();
 
-        switch (type) {
-            case STRING: return "'" + cell.getStringCellValue().replace("'", "''") + "'";
-            case NUMERIC:
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    LocalDate date = cell.getLocalDateTimeCellValue().toLocalDate();
-                    return "'" + date + "'";
-                }
-                return BigDecimal.valueOf(cell.getNumericCellValue()).toPlainString();
-            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
-            case BLANK:
-            default: return "NULL";
-        }
+        return switch (type) {
+            case STRING -> "'" + cell.getStringCellValue().replace("'", "''") + "'";
+            case NUMERIC -> DateUtil.isCellDateFormatted(cell)
+                    ? "'" + cell.getLocalDateTimeCellValue().toLocalDate() + "'"
+                    : BigDecimal.valueOf(cell.getNumericCellValue()).toPlainString();
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> "NULL";
+        };
     }
 }

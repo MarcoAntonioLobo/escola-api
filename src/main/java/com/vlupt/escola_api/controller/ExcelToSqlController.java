@@ -26,57 +26,78 @@ public class ExcelToSqlController {
         this.service = service;
     }
 
-    // -------------------------------
-    // Apenas gera SQL (não executa)
-    // -------------------------------
-    @PostMapping(value = "/excel-to-sql", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // ======================================================
+    // GERA SQL (NÃO EXECUTA)
+    // ======================================================
+    @PostMapping(
+        value = "/excel-to-sql",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<?> convertExcel(
             @RequestPart("file") MultipartFile file,
             @RequestParam("table") String tableName) {
+
         try {
-            validateRequest(file, tableName);
-            List<String> sqlLines = service.convert(file.getInputStream(), tableName);
+            validateFile(file);
+
+            List<String> sqlLines =
+                    service.convert(file.getInputStream(), tableName);
+
             return ResponseEntity.ok(sqlLines);
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao processar o arquivo XLSX: " + e.getMessage());
         }
     }
 
-    // -------------------------------
-    // Envia direto para o banco
-    // -------------------------------
-    @PostMapping(value = "/excel-to-db", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> saveExcelToDatabase(@RequestPart("file") MultipartFile file) {
+    // ======================================================
+    // INSERE DIRETO NO BANCO
+    // ======================================================
+    @PostMapping(
+        value = "/excel-to-db",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<?> saveExcelToDatabase(
+            @RequestPart("file") MultipartFile file) {
+
         try {
-            validateRequest(file, "client_data");
+            validateFile(file);
+
             service.saveToDatabase(file.getInputStream());
-            return ResponseEntity.ok("Dados inseridos com sucesso!");
+
+            return ResponseEntity.ok(
+                    "Dados inseridos com sucesso!"
+            );
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erro ao processar o arquivo XLSX: " + e.getMessage());
         }
     }
 
-    // -------------------------------
-    // Validação básica do request
-    // -------------------------------
-    private void validateRequest(MultipartFile file, String tableName) {
+    // ======================================================
+    // VALIDAÇÃO BÁSICA
+    // ======================================================
+    private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum arquivo XLSX foi enviado.");
-        }
-        if (tableName == null || tableName.isBlank()) {
-            throw new IllegalArgumentException("O nome da tabela é obrigatório para gerar SQL.");
+            throw new IllegalArgumentException(
+                    "Nenhum arquivo XLSX foi enviado."
+            );
         }
     }
 }
