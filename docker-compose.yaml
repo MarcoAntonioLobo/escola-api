@@ -1,36 +1,4 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NODE_ENV: production
-    container_name: escola_app
-    environment:
-      NODE_ENV: production               # <-- adiciona aqui para eliminar o WARN
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/escola?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: escola_user
-      SPRING_DATASOURCE_PASSWORD: escola_pass
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    networks:
-      - escola_net
-    volumes:
-      - ./src:/app/src         # Hot reload backend
-      - ./frontend:/app/frontend # Hot reload frontend
-      - /app/target           # Persistir build (dev)
-    command: >
-      sh -c "if [ '${NODE_ENV}' = 'dev' ]; then
-               cd frontend && npm install && npm run dev & 
-               mvn spring-boot:run;
-             else
-               java -jar app.jar;
-             fi"
-
   db:
     image: mysql:8.1
     container_name: escola_db
@@ -45,6 +13,53 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - escola_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: production
+    container_name: escola_app
+    environment:
+      NODE_ENV: production
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/escola?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: escola_user
+      SPRING_DATASOURCE_PASSWORD: escola_pass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      # Habilita actuator health endpoint
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - escola_net
+    volumes:
+      - ./src:/app/src
+      - ./frontend:/app/frontend
+      - /app/target
+    command: >
+      sh -c "if [ '${NODE_ENV}' = 'dev' ]; then
+      cd frontend && npm install && npm run dev & 
+      mvn spring-boot:run;
+      else
+      java -jar /app/target/app.jar;
+      fi"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   db_data:

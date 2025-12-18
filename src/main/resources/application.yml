@@ -6,20 +6,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     open-in-view: false
-
-  mvc:
-    pathmatch:
-      matching-strategy: ant-path-matcher
+    properties:
+      hibernate:
+        sql: true
 
   sql:
     init:
       mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
 
-  security:
-    user:
-      name: Mark
-      password: 233234
-      roles: ADMIN
+  mvc:
+    pathmatch:
+      matching-strategy: ant-path-matcher

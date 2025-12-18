@@ -1,5 +1,5 @@
 -- ===============================
--- RESETAR TABELAS (Evita duplicatas)
+-- RESETAR TABELAS
 -- ===============================
 
 DELETE FROM client_data;
@@ -73,25 +73,17 @@ INSERT INTO client (external_id, school_name, cafeteria_name, location, student_
 ('EXT059','Cantina Mundo Verde Escola Alfa Júnior','CANTINA Franchising','São Paulo SP',290),
 ('EXT060','Cantina MaxKids Colégio Vitória Infantil','CANTINA Franchising','São Paulo SP',500);
 
+-- ===============================
+-- CLIENT_DATA
+-- ===============================
 INSERT INTO client_data
-(data_id, client_id, month_date, revenue, expenses, order_count, notes, registered_students, average_cantina_per_student, average_pedagogical_per_student, average_ticket_app, cantina_percent, orders_outside_vpt, profitability, revenue_loss)
+(client_id, month_date, cantina_percent, registered_students,
+ average_cantina_per_student, average_pedagogical_per_student,
+ order_count, revenue, profitability, revenue_loss,
+ orders_outside_vpt, average_ticket_app, notes)
 VALUES
-(1,2,'2025-08-01',85000.00,0,5400,'Mês de agosto',85,35.00,40.00,14.50,0.08,45,42000.00,1300.00),
-(2,2,'2025-09-01',89300.40,0,5600,'Mês de setembro',90,36.00,41.00,15.05,0.09,47,44000.00,1350.00),
-(3,2,'2025-10-01',94000.00,0,5800,'Mês de outubro',95,37.00,42.00,15.62,0.10,50,46000.00,1400.00),
-(4,2,'2025-11-01',90000.00,0,5500,'Mês de novembro',88,36.00,41.00,15.10,0.11,48,44000.00,1380.00),
+(1, '2025-01-01', 0.2540, 320, 48.50, 22.30, 120, 15400.50, 18.20, 450.00, 15, 12.80, 'Janeiro estável'),
+(1, '2025-02-01', 0.2680, 340, 50.10, 23.10, 132, 16820.75, 19.40, 380.00, 12, 13.40, 'Crescimento pós férias'),
 
-(5,3,'2025-08-01',62000.00,0,4000,'Mês de agosto',62,25.50,30.00,15.50,0.08,30,30000.00,1000.00),
-(6,3,'2025-09-01',65000.00,0,4200,'Mês de setembro',65,26.00,31.00,15.48,0.09,32,32000.00,1050.00),
-(7,3,'2025-10-01',70000.00,0,4400,'Mês de outubro',70,27.50,33.00,15.91,0.10,35,34000.00,1100.00),
-(8,3,'2025-11-01',68000.00,0,4300,'Mês de novembro',68,26.80,32.50,15.81,0.11,34,33000.00,1080.00),
-
-(9,4,'2025-08-01',48000.00,0,3200,'Mês de agosto',48,24.00,28.00,15.00,0.08,28,23000.00,900.00),
-(10,4,'2025-09-01',51000.00,0,3300,'Mês de setembro',51,25.00,29.00,15.45,0.09,29,24000.00,920.00),
-(11,4,'2025-10-01',53000.00,0,3400,'Mês de outubro',53,25.50,30.00,15.59,0.10,30,25000.00,940.00),
-(12,4,'2025-11-01',52000.00,0,3350,'Mês de novembro',52,25.00,29.50,15.52,0.11,29,24500.00,930.00),
-
-(13,5,'2025-08-01',70000.00,0,4500,'Mês de agosto',28,28.00,33.00,15.55,0.07,35,35000.00,1100.00),
-(14,5,'2025-09-01',73000.00,0,4600,'Mês de setembro',29,29.00,34.00,15.87,0.08,37,36500.00,1150.00),
-(15,5,'2025-10-01',76000.00,0,4700,'Mês de outubro',30,30.00,35.00,16.17,0.06,38,38000.00,1200.00),
-(16,5,'2025-11-01',75000.00,0,4650,'Mês de novembro',29,29.50,34.50,16.03,0.08,36,37500.00,1180.00);
+(2, '2025-01-01', 0.2310, 290, 44.20, 20.80, 110, 13950.00, 16.90, 520.00, 18, 11.90, 'Leve queda'),
+(3, '2025-01-01', 0.3010, 410, 55.00, 26.00, 180, 22540.00, 21.30, 300.00, 9, 15.20, 'Excelente performance');
