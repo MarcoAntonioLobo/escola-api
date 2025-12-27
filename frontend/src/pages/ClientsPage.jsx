@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "../components/ui/Card";
 import Pagination from "../components/Pagination";
-import { ArrowUpDown, Printer, Download, MoreVertical } from "lucide-react";
+import { ArrowUpDown, Printer, Download, Search } from "lucide-react";
 import api from "../services/api";
 
 const VALID_SORT_FIELDS = ["schoolName", "cafeteriaName", "location", "studentCount"];
@@ -122,7 +122,8 @@ export default function ClientsPage() {
     ]);
 
     const csvContent =
-      "data:text/csv;charset=utf-8," + [headers, ...rows].map((e) => e.join(",")).join("\n");
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
 
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);
@@ -177,28 +178,20 @@ export default function ClientsPage() {
     <div className="p-6 bg-gray-900 min-h-screen text-gray-100 flex justify-center">
       <Card className="relative w-full max-w-6xl">
 
-        {/* BOTÕES SUPERIOR DIREITA */}
-        <div className="absolute top-4 right-4 flex gap-4 z-50">
-          <Download
-            size={23}
-            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
-            onClick={downloadCSV}
-          />
-          <Printer
-            size={23}
-            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
-            onClick={handlePrint}
-          />
-          <MoreVertical
-            size={23}
-            className="text-gray-100 cursor-pointer hover:text-green-400 transition"
+        {/* BOTÕES SUPERIORES */}
+        <div className="absolute top-4 right-4 flex gap-2 z-50">
+          <Download size={28} className="cursor-pointer" onClick={downloadCSV} />
+          <Printer size={28} className="cursor-pointer" onClick={handlePrint} />
+          <Search
+            size={28}
+            className="cursor-pointer"
             onClick={() => setMenuOpen(!menuOpen)}
           />
         </div>
 
-        {/* MENU DE FILTROS */}
+        {/* FILTROS */}
         {menuOpen && (
-          <div className="absolute top-12 right-4 z-50 w-80 flex flex-col gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700 shadow-lg">
+          <div className="absolute top-16 right-4 z-50 w-80 flex flex-col gap-4 p-4 bg-gray-900 rounded-lg border border-gray-700 shadow-lg">
             <input
               placeholder="Filtrar por Escola"
               value={schoolFilter}
