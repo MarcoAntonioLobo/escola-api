@@ -1,14 +1,4 @@
 -- ===============================
--- RESETAR TABELAS
--- ===============================
-
-DELETE FROM client_data;
-DELETE FROM client;
-
-ALTER TABLE client_data AUTO_INCREMENT = 1;
-ALTER TABLE client AUTO_INCREMENT = 1;
-
--- ===============================
 -- CLIENTES
 -- ===============================
 INSERT INTO client (external_id, school_name, cafeteria_name, location, student_count) VALUES

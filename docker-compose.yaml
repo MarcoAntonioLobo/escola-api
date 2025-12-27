@@ -14,28 +14,24 @@ services:
     networks:
       - escola_net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-proot123"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 20
       start_period: 30s
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        NODE_ENV: production
     container_name: escola_app
     environment:
-      NODE_ENV: production
+      NODE_ENV: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/escola?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: escola_user
       SPRING_DATASOURCE_PASSWORD: escola_pass
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
-      # Habilita actuator health endpoint
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info"
     ports:
       - "8080:8080"
     depends_on:
@@ -48,21 +44,32 @@ services:
       - ./frontend:/app/frontend
       - /app/target
     command: >
-      sh -c "if [ '${NODE_ENV}' = 'dev' ]; then
-      cd frontend && npm install && npm run dev & 
-      mvn spring-boot:run;
-      else
-      java -jar /app/target/app.jar;
-      fi"
+      sh -c "
+        # Espera o MySQL estar pronto
+        until mysql -h db -u$SPRING_DATASOURCE_USERNAME -p$SPRING_DATASOURCE_PASSWORD -e 'select 1' >/dev/null 2>&1; do
+          echo 'Esperando pelo MySQL...'
+          sleep 2
+        done;
+
+        # Lógica de dev/prod
+        if [ '${NODE_ENV}' = 'dev' ]; then
+          cd frontend && npm install && npm run dev &
+          mvn spring-boot:run
+        else
+          java -jar /app/target/app.jar
+        fi
+      "
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 40s
 
 volumes:
   db_data:
 
 networks:
   escola_net:
+    driver: bridge

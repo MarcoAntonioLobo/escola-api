@@ -4,6 +4,11 @@ spring:
     username: escola_user
     password: escola_pass
 
+  security:
+    user:
+      name: Mark
+      password: 233234
+
   jpa:
     hibernate:
       ddl-auto: none
