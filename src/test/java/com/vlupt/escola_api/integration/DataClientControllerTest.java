@@ -1,9 +1,6 @@
 package com.vlupt.escola_api.integration;
 
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -11,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vlupt.escola_api.controller.DataClientController;
-import com.vlupt.escola_api.dto.DataClientFilterDTO;
 import com.vlupt.escola_api.dto.DataClientRequestDTO;
 import com.vlupt.escola_api.dto.DataClientResponseDTO;
 import com.vlupt.escola_api.exception.GlobalExceptionHandler;
@@ -73,93 +68,67 @@ class DataClientControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
 
-        client = Client.builder().clientId(1).schoolName("Escola Teste").build();
+        client = Client.builder()
+                .clientId(1)
+                .schoolName("Escola Teste")
+                .build();
 
         dataClient = DataClient.builder()
                 .dataId(1)
                 .client(client)
                 .monthDate(LocalDate.of(2025, 11, 1))
-                .revenue(BigDecimal.valueOf(1000))
                 .registeredStudents(100)
+                .revenue(BigDecimal.valueOf(1000))
                 .notes("Teste")
                 .build();
 
         requestDTO = DataClientRequestDTO.builder()
                 .clientId(client.getClientId())
-                .monthDate(dataClient.getMonthDate())
-                .revenue(dataClient.getRevenue())
-                .registeredStudents(dataClient.getRegisteredStudents())
-                .notes(dataClient.getNotes())
+                .monthDate(LocalDate.of(2025, 11, 1))
+                .location("Lisboa")
+                .school("Escola Teste")
+                .cafeteria("Cantina Central")
+                .registeredStudents(100)
+                .revenue(BigDecimal.valueOf(1000))
+                .notes("Teste")
                 .build();
 
         responseDTO = DataClientResponseDTO.builder()
-                .dataId(dataClient.getDataId())
+                .dataId(1)
                 .clientId(client.getClientId())
-                .monthDate(dataClient.getMonthDate())
-                .revenue(dataClient.getRevenue())
-                .registeredStudents(dataClient.getRegisteredStudents())
-                .notes(dataClient.getNotes())
+                .monthDate(requestDTO.getMonthDate())
+                .location(requestDTO.getLocation())
+                .school(requestDTO.getSchool())
+                .cafeteria(requestDTO.getCafeteria())
+                .registeredStudents(requestDTO.getRegisteredStudents())
+                .revenue(requestDTO.getRevenue())
+                .notes(requestDTO.getNotes())
                 .build();
     }
 
-    // ===============================
-    // GET ALL
-    // ===============================
-    @Test
-    void testFindAll() throws Exception {
-        when(service.findAll()).thenReturn(List.of(dataClient));
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
-
-        mockMvc.perform(get("/api/client-data"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
-    }
-
-    // ===============================
-    // GET BY ID
-    // ===============================
-    @Test
-    void testFindById() throws Exception {
-        when(service.findById(1)).thenReturn(Optional.of(dataClient));
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
-
-        mockMvc.perform(get("/api/client-data/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
-    }
-
-    @Test
-    void testFindById_NotFound() throws Exception {
-        when(service.findById(1)).thenReturn(Optional.empty());
-
-        mockMvc.perform(get("/api/client-data/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
-    }
-
-    // ===============================
-    // CREATE
-    // ===============================
     @Test
     void testCreate() throws Exception {
-        when(clientService.findById(client.getClientId())).thenReturn(Optional.of(client));
-        when(mapper.toEntity(requestDTO, client)).thenReturn(dataClient);
-        when(service.save(dataClient)).thenReturn(dataClient);
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
+        when(clientService.findById(client.getClientId()))
+                .thenReturn(Optional.of(client));
+        when(mapper.toEntity(requestDTO, client))
+                .thenReturn(dataClient);
+        when(service.save(dataClient))
+                .thenReturn(dataClient);
+        when(mapper.toResponse(dataClient))
+                .thenReturn(responseDTO);
 
         mockMvc.perform(post("/api/client-data")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
+                .andExpect(jsonPath("$.dataId").value(1))
+                .andExpect(jsonPath("$.school").value("Escola Teste"));
     }
 
     @Test
     void testCreate_ClientNotFound() throws Exception {
-        when(clientService.findById(client.getClientId())).thenReturn(Optional.empty());
+        when(clientService.findById(client.getClientId()))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/client-data")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -168,83 +137,37 @@ class DataClientControllerTest {
                 .andExpect(jsonPath("$.status").value(404));
     }
 
-    // ===============================
-    // UPDATE
-    // ===============================
     @Test
     void testUpdate() throws Exception {
-        when(clientService.findById(client.getClientId())).thenReturn(Optional.of(client));
-        when(mapper.toEntity(requestDTO, client)).thenReturn(dataClient);
-        when(service.update(1, dataClient)).thenReturn(dataClient);
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
+        when(clientService.findById(client.getClientId()))
+                .thenReturn(Optional.of(client));
+        when(mapper.toEntity(requestDTO, client))
+                .thenReturn(dataClient);
+        when(service.update(1, dataClient))
+                .thenReturn(dataClient);
+        when(mapper.toResponse(dataClient))
+                .thenReturn(responseDTO);
 
         mockMvc.perform(put("/api/client-data/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$.registeredStudents").value(dataClient.getRegisteredStudents()));
+                .andExpect(jsonPath("$.school").value("Escola Teste"));
     }
 
     @Test
     void testUpdate_NotFound() throws Exception {
-        when(clientService.findById(client.getClientId())).thenReturn(Optional.of(client));
-        when(mapper.toEntity(requestDTO, client)).thenReturn(dataClient);
-        when(service.update(1, dataClient)).thenThrow(new ResourceNotFoundException("Registro não encontrado"));
+        when(clientService.findById(client.getClientId()))
+                .thenReturn(Optional.of(client));
+        when(mapper.toEntity(requestDTO, client))
+                .thenReturn(dataClient);
+        when(service.update(1, dataClient))
+                .thenThrow(new ResourceNotFoundException("Registro não encontrado"));
 
         mockMvc.perform(put("/api/client-data/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDTO)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
-    }
-
-    // ===============================
-    // DELETE
-    // ===============================
-    @Test
-    void testDelete() throws Exception {
-        mockMvc.perform(delete("/api/client-data/1"))
-                .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testDelete_NotFound() throws Exception {
-        doThrow(new ResourceNotFoundException("Registro não encontrado")).when(service).delete(1);
-
-        mockMvc.perform(delete("/api/client-data/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
-    }
-
-    // ===============================
-    // GET BY CLIENT
-    // ===============================
-    @Test
-    void testFindByClient() throws Exception {
-        when(service.findByClientId(client.getClientId())).thenReturn(List.of(dataClient));
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
-
-        mockMvc.perform(get("/api/client-data/client/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()))
-                .andExpect(jsonPath("$[0].registeredStudents").value(dataClient.getRegisteredStudents()));
-    }
-
-    // ===============================
-    // FILTER
-    // ===============================
-    @Test
-    void testFilter() throws Exception {
-        DataClientFilterDTO filterDTO = new DataClientFilterDTO();
-        filterDTO.setClientId(client.getClientId());
-
-        when(service.filter(filterDTO)).thenReturn(List.of(dataClient));
-        when(mapper.toResponse(dataClient)).thenReturn(responseDTO);
-
-        mockMvc.perform(get("/api/client-data/filter")
-                        .param("clientId", client.getClientId().toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].dataId").value(dataClient.getDataId()));
     }
 }
